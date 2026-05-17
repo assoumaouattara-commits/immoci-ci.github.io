@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ImmoCI – Immobilier Côte d'Ivoire</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --vert:#1a6b3c;--vert-c:#2d9c5a;--vert-p:#eef7f2;
+  --orange:#f4821f;--blanc:#faf8f4;--sable:#e8e0d0;
+  --noir:#0f1a14;--gris:#6b7a72;
+  --om:#f77f00;--wave:#1b98e0;
+  --glass:rgba(10,15,12,.78);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;}
+
+/* ══ SCREENS ══ */
+.screen{position:fixed;inset:0;z-index:10;display:none;overflow-y:auto;background:var(--blanc);}
+.screen.active{display:block;}
+#scr-vr{background:#000;overflow:hidden;}
+#scr-chat{overflow:hidden;}
+
+/* ══ LOADER ══ */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--noir);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;}
+#loader.hide{opacity:0;pointer-events:none;}
+.ld-logo{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:900;color:#fff;margin-bottom:6px;}
+.ld-logo span{color:var(--orange);}
+.ld-sub{color:rgba(255,255,255,.4);font-size:.85rem;margin-bottom:36px;}
+.ld-bar{width:180px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+.ld-fill{height:100%;background:linear-gradient(90deg,var(--vert),var(--vert-c));animation:ldanim 2s ease forwards;}
+@keyframes ldanim{from{width:0}to{width:100%}}
+
+/* ══ NAV ══ */
+.topnav{position:sticky;top:0;z-index:300;display:flex;align-items:center;
+  justify-content:space-between;padding:15px 5%;
+  background:rgba(250,248,244,.94);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(232,224,208,.55);}
+.logo{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:900;
+  color:var(--vert);letter-spacing:-1px;cursor:pointer;border:none;background:none;}
+.logo span{color:var(--orange);}
+.nav-links{display:flex;gap:24px;list-style:none;}
+.nav-links li{cursor:pointer;color:var(--noir);font-size:.88rem;font-weight:500;transition:color .2s;}
+.nav-links li:hover{color:var(--vert);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.nav-btn{padding:9px 20px;border-radius:50px;font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s;}
+.nav-btn.outline{background:transparent;color:var(--vert);border:2px solid var(--vert);}
+.nav-btn.outline:hover{background:var(--vert-p);}
+.nav-btn.solid{background:var(--vert);color:#fff;}
+.nav-btn.solid:hover{background:var(--vert-c);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ HERO ══ */
+.hero{min-height:100vh;background:linear-gradient(135deg,#081510 0%,#1a6b3c 55%,#2d9c5a 100%);
+  display:flex;align-items:center;padding:110px 5% 80px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");}
+.hero-content{position:relative;max-width:660px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);padding:6px 16px;border-radius:50px;
+  color:#fff;font-size:.76rem;font-weight:500;margin-bottom:26px;animation:fadeUp .6s ease both;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,6vw,4rem);
+  font-weight:900;color:#fff;line-height:1.1;margin-bottom:18px;animation:fadeUp .7s ease .1s both;}
+.hero h1 em{color:var(--orange);font-style:normal;}
+.hero p{color:rgba(255,255,255,.76);font-size:1rem;line-height:1.75;margin-bottom:34px;animation:fadeUp .7s ease .2s both;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .7s ease .3s both;}
+.btn-primary{background:var(--orange);color:#fff;padding:14px 30px;border-radius:50px;
+  font-weight:700;font-size:.92rem;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
+  box-shadow:0 4px 20px rgba(244,130,31,.45);transition:all .2s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(244,130,31,.55);}
+.btn-ghost{background:transparent;color:#fff;padding:14px 30px;border-radius:50px;
+  font-weight:500;font-size:.92rem;border:2px solid rgba(255,255,255,.32);
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.1);}
+.hero-stats{display:flex;gap:44px;margin-top:52px;animation:fadeUp .7s ease .4s both;}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:#fff;}
+.stat-lbl{color:rgba(255,255,255,.52);font-size:.73rem;margin-top:3px;}
+
+/* ══ AI RECOMMENDATION BANNER ══ */
+.ai-banner{
+  background:linear-gradient(135deg,#0a0f0c,#1a2e1f);
+  border-radius:20px;margin:0 5% 0;padding:0;overflow:hidden;
+  border:1px solid rgba(26,107,60,.3);
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+}
+.ai-banner-inner{padding:28px 32px;display:flex;align-items:center;gap:20px;}
+.ai-banner-ico{font-size:2.5rem;flex-shrink:0;}
+.ai-banner-text h3{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:4px;}
+.ai-banner-text p{font-size:.82rem;color:rgba(255,255,255,.6);line-height:1.5;}
+.ai-banner-btn{margin-left:auto;flex-shrink:0;padding:11px 22px;border-radius:50px;
+  border:none;background:linear-gradient(135deg,var(--vert),var(--vert-c));
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 16px rgba(26,107,60,.4);transition:all .2s;white-space:nowrap;}
+.ai-banner-btn:hover{transform:translateY(-1px);}
+
+/* ══ SEARCH ══ */
+.search-wrap{padding:0 5%;margin-top:24px;position:relative;z-index:20;}
+.search-card{background:#fff;border-radius:22px;padding:26px 30px;box-shadow:0 20px 60px rgba(0,0,0,.13);}
+.s-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.s-tab{padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:500;
+  border:2px solid var(--sable);background:transparent;cursor:pointer;
+  color:var(--gris);transition:all .2s;font-family:'DM Sans',sans-serif;}
+.s-tab.on{background:var(--vert);color:#fff;border-color:var(--vert);}
+.s-inputs{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
+.sf label{display:block;font-size:.68rem;font-weight:600;color:var(--gris);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.sf select,.sf input{width:100%;padding:11px 14px;border:2px solid var(--sable);
+  border-radius:11px;font-family:'DM Sans',sans-serif;font-size:.87rem;
+  color:var(--noir);background:var(--blanc);outline:none;transition:border-color .2s;}
+.sf select:focus,.sf input:focus{border-color:var(--vert);}
+.btn-search{background:var(--vert);color:#fff;padding:11px 26px;border-radius:11px;
+  font-weight:600;font-size:.88rem;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-search:hover{background:var(--vert-c);}
+
+/* ══ SECTION ══ */
+.section{padding:72px 5%;}
+.sec-tag{font-size:.7rem;font-weight:700;color:var(--orange);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,4vw,2.6rem);
+  font-weight:700;line-height:1.2;margin-bottom:44px;}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:34px;}
+.sec-head .sec-title{margin-bottom:0;}
+.see-all{color:var(--vert);font-size:.84rem;font-weight:600;cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;}
+
+/* ══ AI RECOMMENDATIONS SCREEN ══ */
+.ai-screen-header{background:linear-gradient(135deg,#0a0f0c,#1a3d22);padding:48px 5% 36px;}
+.ai-screen-header h1{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.4rem);
+  font-weight:900;color:#fff;margin-bottom:8px;}
+.ai-screen-header p{color:rgba(255,255,255,.65);font-size:.9rem;line-height:1.6;}
+.ai-profile-card{background:#fff;border-radius:20px;margin:0 5%;margin-top:-24px;
+  padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.1);margin-bottom:0;}
+.ai-profile-title{font-weight:700;font-size:.92rem;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.ai-profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.ai-pref-btn{padding:10px 14px;border:2px solid var(--sable);border-radius:12px;
+  background:var(--blanc);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:.8rem;font-weight:500;color:var(--gris);transition:all .2s;text-align:center;}
+.ai-pref-btn:hover{border-color:var(--vert);color:var(--vert);}
+.ai-pref-btn.sel{border-color:var(--vert);background:var(--vert-p);color:var(--vert);font-weight:700;}
+.ai-budget-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+.ai-budget-row label{font-size:.72rem;font-weight:600;color:var(--gris);
+  text-transform:uppercase;white-space:nowrap;}
+.ai-budget-input{flex:1;padding:10px 13px;border:2px solid var(--sable);border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:.87rem;outline:none;}
+.ai-budget-input:focus{border-color:var(--vert);}
+.btn-ai-search{width:100%;padding:13px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#0a0f0c,var(--vert));color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:all .2s;box-shadow:0 4px 16px rgba(26,107,60,.3);}
+.btn-ai-search:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,107,60,.4);}
+.ai-results-section{padding:28px 5%;}
+.ai-results-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;
+  margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.ai-score-bar{height:3px;background:var(--sable);border-radius:2px;margin-bottom:20px;}
+.ai-score-fill{height:100%;background:linear-gradient(90deg,var(--vert),var(--vert-c));
+  border-radius:2px;animation:scoreAnim .8s ease forwards;}
+@keyframes scoreAnim{from{width:0}}
+.ai-card{background:#fff;border-radius:20px;margin-bottom:16px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);transition:transform .25s,box-shadow .25s;cursor:pointer;
+  display:flex;gap:0;border:1px solid rgba(232,224,208,.5);}
+.ai-card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.1);}
+.ai-card-img{width:140px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.ai-card-img.apt{background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);}
+.ai-card-img.meu{background:linear-gradient(135deg,#f4821f18,#f4821f36);}
+.ai-card-img.vil{background:linear-gradient(135deg,#0f1a1418,#1e3d2836);}
+.ai-card-body{flex:1;padding:18px;}
+.ai-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.ai-match-badge{background:linear-gradient(135deg,var(--vert),var(--vert-c));color:#fff;
+  font-size:.68rem;font-weight:700;padding:4px 10px;border-radius:50px;white-space:nowrap;}
+.ai-card-price{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--vert);}
+.ai-card-price span{font-size:.7rem;font-family:'DM Sans',sans-serif;color:var(--gris);}
+.ai-card-title{font-weight:600;font-size:.88rem;color:var(--noir);margin-bottom:4px;}
+.ai-card-loc{font-size:.76rem;color:var(--gris);margin-bottom:8px;}
+.ai-why{background:var(--vert-p);border-radius:8px;padding:7px 10px;
+  font-size:.72rem;color:var(--vert);line-height:1.5;margin-bottom:10px;}
+.ai-card-btns{display:flex;gap:8px;}
+.ai-card-btn{flex:1;padding:8px;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;
+  font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.ai-btn-view{background:var(--vert);color:#fff;}
+.ai-btn-view:hover{background:var(--vert-c);}
+.ai-btn-vr{background:linear-gradient(135deg,#0a0f0c,var(--vert));color:#fff;}
+.ai-btn-pay{background:linear-gradient(135deg,var(--om),#e05e00);color:#fff;}
+
+/* ══ CATEGORIES ══ */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.cat-card{border-radius:20px;padding:28px 20px;cursor:pointer;transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden;}
+.cat-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.14);}
+.cat-g{background:linear-gradient(135deg,#1a6b3c,#2d9c5a);}
+.cat-o{background:linear-gradient(135deg,#c95e0a,#f4821f);}
+.cat-d{background:linear-gradient(135deg,#0f1a14,#1e3d28);}
+.cat-ai{background:linear-gradient(135deg,#0a0a2e,#1a1a6b);}
+.cat-cnt{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);color:#fff;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:50px;}
+.cat-ico{font-size:2.1rem;margin-bottom:13px;}
+.cat-card h3{font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:4px;}
+.cat-card p{font-size:.76rem;color:rgba(255,255,255,.7);line-height:1.5;}
+
+/* ══ LISTING CARD ══ */
+.listings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+.l-card{background:#fff;border-radius:20px;overflow:hidden;cursor:pointer;
+  transition:transform .3s,box-shadow .3s;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.l-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,.12);}
+.l-img{height:195px;position:relative;overflow:hidden;}
+.l-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.8rem;}
+.l-bg.apt{background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);}
+.l-bg.meu{background:linear-gradient(135deg,#f4821f18,#f4821f36);}
+.l-bg.vil{background:linear-gradient(135deg,#0f1a1418,#1e3d2836);}
+.l-badge{position:absolute;top:12px;left:12px;padding:4px 11px;border-radius:50px;font-size:.66rem;font-weight:700;text-transform:uppercase;}
+.b-loc{background:var(--vert);color:#fff;}
+.b-ven{background:var(--orange);color:#fff;}
+.b-meu{background:#8b6914;color:#fff;}
+.l-fav{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.vr-chip{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.72);color:#fff;font-size:.66rem;font-weight:700;padding:4px 10px;border-radius:50px;display:flex;align-items:center;gap:4px;backdrop-filter:blur(8px);}
+.l-body{padding:18px;}
+.l-price{font-family:'Playfair Display',serif;font-size:1.28rem;font-weight:700;color:var(--vert);margin-bottom:4px;}
+.l-price span{font-size:.7rem;color:var(--gris);font-family:'DM Sans',sans-serif;}
+.l-title{font-weight:600;font-size:.88rem;margin-bottom:6px;color:var(--noir);}
+.l-loc{color:var(--gris);font-size:.76rem;margin-bottom:11px;}
+.l-feats{display:flex;gap:10px;padding-top:11px;border-top:1px solid var(--sable);}
+.feat{font-size:.72rem;color:var(--gris);}
+.l-card-btns{display:flex;gap:8px;margin-top:11px;}
+.lc-btn{flex:1;padding:8px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.lc-vr{background:linear-gradient(135deg,var(--vert),var(--vert-c));color:#fff;}
+.lc-pay{background:linear-gradient(135deg,var(--om),#e05e00);color:#fff;}
+
+/* ══ ESTIMATION ══ */
+.est-band{background:linear-gradient(135deg,#0a1f11,#1a6b3c);border-radius:28px;margin:0 5% 76px;padding:64px 5%;position:relative;overflow:hidden;}
+.est-band::after{content:'🏠';position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.07;}
+.est-band .sec-title{color:#fff;margin-bottom:10px;}
+.est-band p{color:rgba(255,255,255,.68);font-size:.88rem;max-width:480px;line-height:1.7;margin-bottom:26px;}
+.est-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;max-width:740px;}
+.est-lbl{display:block;font-size:.67rem;font-weight:600;color:rgba(255,255,255,.52);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.est-inp{width:100%;padding:11px 14px;border-radius:11px;border:2px solid rgba(255,255,255,.16);background:rgba(255,255,255,.1);color:#fff;font-family:'DM Sans',sans-serif;font-size:.87rem;outline:none;}
+.est-inp:focus{border-color:var(--orange);}
+
+/* ══ FOOTER ══ */
+footer{background:var(--noir);color:#fff;padding:56px 5% 28px;}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:44px;margin-bottom:44px;}
+.foot-logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff;display:block;margin-bottom:12px;}
+.foot-logo span{color:var(--orange);}
+.foot-brand p{color:rgba(255,255,255,.4);font-size:.8rem;line-height:1.7;}
+.foot-col h4{font-weight:600;margin-bottom:14px;font-size:.86rem;}
+.foot-col ul{list-style:none;}
+.foot-col li{margin-bottom:9px;}
+.foot-col a{color:rgba(255,255,255,.4);text-decoration:none;font-size:.8rem;transition:color .2s;cursor:pointer;}
+.foot-col a:hover{color:var(--orange);}
+.foot-bot{padding-top:24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;color:rgba(255,255,255,.28);font-size:.74rem;}
+
+/* ══ PAYMENT SCREEN ══ */
+.pay-screen-header{background:linear-gradient(135deg,#1a0a00,#6b2a00);padding:44px 5%;display:flex;align-items:center;gap:18px;}
+.pay-screen-header .ph-icon{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:1.7rem;flex-shrink:0;}
+.pay-screen-header h1{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3vw,2rem);color:#fff;font-weight:700;}
+.pay-screen-header p{color:rgba(255,255,255,.65);font-size:.84rem;margin-top:4px;}
+.pay-body{padding:28px 5%;max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 360px;gap:24px;}
+.pay-card{background:#fff;border-radius:20px;padding:26px;margin-bottom:18px;border:1px solid rgba(232,224,208,.6);box-shadow:0 2px 10px rgba(0,0,0,.04);}
+.pay-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px;}
+.pay-card-sub{color:var(--gris);font-size:.78rem;margin-bottom:20px;}
+
+/* Property summary in payment */
+.pay-prop-summary{background:var(--blanc);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:20px;border:1px solid var(--sable);}
+.pps-img{width:60px;height:60px;border-radius:12px;background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;}
+.pps-name{font-weight:700;font-size:.9rem;color:var(--noir);margin-bottom:3px;}
+.pps-loc{font-size:.76rem;color:var(--gris);}
+.pps-price{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--vert);margin-left:auto;flex-shrink:0;}
+
+/* Amount breakdown */
+.amount-rows{display:flex;flex-direction:column;gap:0;}
+.amount-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--sable);font-size:.86rem;}
+.amount-row:last-child{border:none;font-weight:700;font-size:.96rem;}
+.amount-row .ar-lbl{color:var(--gris);}
+.amount-row .ar-val{color:var(--noir);font-weight:600;}
+.amount-row.total .ar-lbl{color:var(--noir);}
+.amount-row.total .ar-val{color:var(--vert);font-family:'Playfair Display',serif;font-size:1.1rem;}
+
+/* Payment methods */
+.pay-methods{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+.pay-method{display:flex;align-items:center;gap:14px;padding:16px;
+  border:2px solid var(--sable);border-radius:14px;cursor:pointer;transition:all .2s;}
+.pay-method:hover{border-color:var(--om);}
+.pay-method.sel-om{border-color:var(--om);background:rgba(247,127,0,.05);}
+.pay-method.sel-wave{border-color:var(--wave);background:rgba(27,152,224,.05);}
+.pay-method.sel-card{border-color:var(--vert);background:var(--vert-p);}
+.pm-logo{width:52px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.pm-logo.om{background:linear-gradient(135deg,var(--om),#e05e00);}
+.pm-logo.wave{background:linear-gradient(135deg,var(--wave),#0a6ba8);}
+.pm-logo.card{background:linear-gradient(135deg,#1a1a6b,#3333ab);}
+.pm-info{flex:1;}
+.pm-name{font-weight:700;font-size:.9rem;color:var(--noir);}
+.pm-desc{font-size:.74rem;color:var(--gris);margin-top:2px;}
+.pm-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--sable);
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.pay-method.sel-om .pm-radio{border-color:var(--om);background:var(--om);}
+.pay-method.sel-wave .pm-radio{border-color:var(--wave);background:var(--wave);}
+.pay-method.sel-card .pm-radio{border-color:var(--vert);background:var(--vert);}
+.pm-radio::after{content:'✓';color:#fff;font-size:.65rem;font-weight:700;display:none;}
+.pay-method.sel-om .pm-radio::after,.pay-method.sel-wave .pm-radio::after,.pay-method.sel-card .pm-radio::after{display:block;}
+
+/* Phone input for mobile money */
+.pay-phone-field{margin-bottom:16px;}
+.pay-phone-label{font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:block;}
+.pay-phone-wrap{display:flex;gap:10px;}
+.pay-country-code{padding:11px 14px;border:2px solid var(--sable);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:.87rem;background:var(--blanc);outline:none;width:110px;}
+.pay-phone-input{flex:1;padding:11px 14px;border:2px solid var(--sable);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:.87rem;outline:none;transition:border-color .2s;}
+.pay-phone-input:focus{border-color:var(--om);}
+
+/* OTP */
+.otp-section{display:none;text-align:center;padding:20px 0;}
+.otp-section.show{display:block;}
+.otp-ico{font-size:3rem;margin-bottom:12px;}
+.otp-title{font-weight:700;font-size:.95rem;margin-bottom:6px;}
+.otp-desc{font-size:.8rem;color:var(--gris);margin-bottom:18px;line-height:1.6;}
+.otp-inputs{display:flex;gap:10px;justify-content:center;margin-bottom:18px;}
+.otp-input{width:46px;height:52px;border:2px solid var(--sable);border-radius:12px;
+  text-align:center;font-size:1.3rem;font-weight:700;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border-color .2s;}
+.otp-input:focus{border-color:var(--om);}
+
+/* Pay button */
+.btn-pay-now{width:100%;padding:15px;border-radius:14px;border:none;color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-pay-om{background:linear-gradient(135deg,var(--om),#e05e00);box-shadow:0 4px 20px rgba(247,127,0,.35);}
+.btn-pay-om:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(247,127,0,.45);}
+.btn-pay-wave{background:linear-gradient(135deg,var(--wave),#0a6ba8);box-shadow:0 4px 20px rgba(27,152,224,.35);}
+.btn-pay-wave:hover{transform:translateY(-2px);}
+.btn-pay-card{background:linear-gradient(135deg,var(--vert),var(--vert-c));box-shadow:0 4px 20px rgba(26,107,60,.35);}
+.btn-pay-card:hover{transform:translateY(-2px);}
+.pay-secure-note{display:flex;align-items:center;gap:8px;justify-content:center;
+  margin-top:12px;font-size:.74rem;color:var(--gris);}
+
+/* Payment success */
+.pay-success{display:none;text-align:center;padding:40px 20px;}
+.pay-success.show{display:flex;flex-direction:column;align-items:center;}
+.pay-success-ico{font-size:5rem;margin-bottom:16px;animation:popIn .5s ease;}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.pay-success h2{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--vert);margin-bottom:10px;}
+.pay-success p{color:var(--gris);font-size:.88rem;max-width:380px;line-height:1.7;margin-bottom:24px;}
+.pay-receipt{background:var(--blanc);border:1px solid var(--sable);border-radius:14px;padding:18px;width:100%;max-width:340px;margin-bottom:20px;}
+.receipt-row{display:flex;justify-content:space-between;padding:7px 0;font-size:.82rem;border-bottom:1px solid var(--sable);}
+.receipt-row:last-child{border:none;}
+.rr-lbl{color:var(--gris);}
+.rr-val{font-weight:600;color:var(--noir);}
+.pay-success-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+/* Pay sidebar */
+.pay-sidebar{position:sticky;top:80px;align-self:start;}
+.pay-trust-card{background:#fff;border-radius:18px;padding:22px;margin-bottom:14px;border:1px solid rgba(232,224,208,.6);box-shadow:0 2px 10px rgba(0,0,0,.04);}
+.ptc-title{font-weight:700;font-size:.88rem;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.trust-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;font-size:.8rem;color:var(--gris);line-height:1.5;}
+.trust-item:last-child{margin-bottom:0;}
+.pay-partners{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.partner-badge{padding:7px 14px;border-radius:8px;font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:5px;}
+.pb-om{background:linear-gradient(135deg,var(--om),#e05e00);color:#fff;}
+.pb-wave{background:linear-gradient(135deg,var(--wave),#0a6ba8);color:#fff;}
+.pb-mtn{background:linear-gradient(135deg,#ffd700,#e6a800);color:#000;}
+.pb-moov{background:linear-gradient(135deg,#0057e7,#003eb3);color:#fff;}
+
+/* ══ CHAT ══ */
+#chat-fab{position:fixed;bottom:28px;right:28px;z-index:8000;
+  width:58px;height:58px;border-radius:50%;
+  background:linear-gradient(135deg,var(--vert),var(--vert-c));
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 6px 24px rgba(26,107,60,.45);
+  transition:transform .2s,box-shadow .2s;
+  animation:fabPop .5s cubic-bezier(.34,1.56,.64,1) 2.5s both;}
+#chat-fab:hover{transform:scale(1.1);}
+.fab-ico{font-size:1.5rem;}
+.fab-badge{position:absolute;top:-4px;right:-4px;background:var(--orange);color:#fff;
+  width:20px;height:20px;border-radius:50%;font-size:.65rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border:2px solid #fff;
+  animation:badgePulse 2s ease-in-out infinite;}
+@keyframes fabPop{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+@keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+.chat-layout{display:grid;grid-template-columns:320px 1fr;height:100vh;}
+.chat-sidebar{background:#fff;border-right:1px solid var(--sable);display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.chat-sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px 18px 14px;background:linear-gradient(135deg,#0a1f11,#1a6b3c);}
+.chat-sidebar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#fff;}
+.chat-sidebar-sub{font-size:.7rem;color:rgba(255,255,255,.52);margin-top:2px;}
+.chat-close-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;}
+.chat-close-btn:hover{background:rgba(255,255,255,.25);}
+.chat-search-wrap{position:relative;padding:12px 14px;border-bottom:1px solid var(--sable);}
+.chat-search-ico{position:absolute;left:26px;top:50%;transform:translateY(-50%);font-size:.85rem;}
+.chat-search-input{width:100%;padding:8px 12px 8px 32px;border:2px solid var(--sable);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:.82rem;background:var(--blanc);outline:none;}
+.chat-search-input:focus{border-color:var(--vert);}
+.conv-tabs{display:flex;padding:8px 12px;border-bottom:1px solid var(--sable);gap:4px;}
+.conv-tab{flex:1;padding:6px 4px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:var(--gris);cursor:pointer;border-radius:7px;transition:all .2s;}
+.conv-tab.active{background:var(--vert-p);color:var(--vert);font-weight:700;}
+.conv-list{flex:1;overflow-y:auto;}
+.conv-item{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;transition:background .2s;border-bottom:1px solid rgba(232,224,208,.4);position:relative;}
+.conv-item:hover{background:var(--blanc);}
+.conv-item.active{background:var(--vert-p);}
+.ci-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;position:relative;}
+.ci-avatar.online::after{content:'';position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;}
+.ci-avatar.prop{background:linear-gradient(135deg,#1a6b3c,#2d9c5a);}
+.ci-avatar.user{background:linear-gradient(135deg,#0a3d6b,#1a6bab);}
+.ci-avatar.group{background:linear-gradient(135deg,#6b1a6b,#ab3dab);}
+.ci-avatar.support{background:linear-gradient(135deg,var(--orange),#c95e0a);}
+.ci-body{flex:1;min-width:0;}
+.ci-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.ci-name{font-weight:600;font-size:.84rem;color:var(--noir);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.ci-time{font-size:.66rem;color:var(--gris);}
+.ci-last{font-size:.76rem;color:var(--gris);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-unread{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--vert);color:#fff;width:17px;height:17px;border-radius:50%;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.new-group-btn{padding:12px 14px;border-top:1px solid var(--sable);display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.8rem;color:var(--vert);font-weight:600;background:#fff;transition:background .2s;}
+.new-group-btn:hover{background:var(--vert-p);}
+
+.chat-main{display:flex;flex-direction:column;position:relative;height:100vh;background:var(--blanc);}
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;}
+.chat-empty-ico{font-size:4rem;margin-bottom:16px;}
+.chat-empty h3{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:8px;}
+.chat-empty p{color:var(--gris);font-size:.84rem;line-height:1.7;max-width:300px;margin-bottom:22px;}
+.btn-start-chat{padding:11px 26px;border-radius:50px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;}
+
+.chat-conv{display:flex;flex-direction:column;height:100vh;}
+.conv-header{display:flex;align-items:center;gap:11px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--sable);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.conv-back{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--gris);padding:4px 7px;border-radius:7px;display:none;}
+.conv-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.conv-info{flex:1;}
+.conv-name{font-weight:700;font-size:.92rem;color:var(--noir);}
+.conv-status{font-size:.72rem;color:var(--gris);margin-top:1px;}
+.conv-actions{display:flex;gap:7px;}
+.conv-action-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--sable);background:var(--blanc);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all .2s;}
+.conv-action-btn:hover{background:var(--vert-p);border-color:var(--vert);}
+
+.pinned-annonce{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--sable);cursor:pointer;}
+.pa-img{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.pa-info{flex:1;}
+.pa-title{font-size:.78rem;font-weight:600;color:var(--noir);}
+.pa-price{font-size:.7rem;color:var(--vert);font-weight:600;}
+.pa-view-btn{padding:5px 12px;border-radius:50px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer;}
+
+.messages-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(to bottom,var(--blanc),#f0ece4);}
+.msg-day{text-align:center;font-size:.68rem;color:var(--gris);background:rgba(255,255,255,.7);
+  padding:4px 12px;border-radius:50px;align-self:center;margin:6px 0;}
+.msg{display:flex;gap:8px;max-width:75%;animation:msgIn .2s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.me{align-self:flex-end;flex-direction:row-reverse;}
+.msg.them{align-self:flex-start;}
+.msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;}
+.msg-bubble{padding:10px 14px;border-radius:16px;font-size:.84rem;line-height:1.55;position:relative;}
+.msg.me .msg-bubble{background:linear-gradient(135deg,var(--vert),var(--vert-c));color:#fff;border-bottom-right-radius:4px;}
+.msg.them .msg-bubble{background:#fff;color:var(--noir);border:1px solid rgba(232,224,208,.7);border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.msg-time{font-size:.6rem;margin-top:4px;opacity:.7;text-align:right;}
+.msg.me .msg-time{color:rgba(255,255,255,.7);}
+.msg.them .msg-time{color:var(--gris);}
+.msg-status{font-size:.65rem;margin-left:3px;}
+
+/* Photo message */
+.msg-photo{border-radius:12px;max-width:200px;background:rgba(0,0,0,.08);padding:8px;display:flex;align-items:center;justify-content:center;font-size:3rem;height:120px;}
+
+/* Shared annonce in chat */
+.msg-annonce{background:#fff;border-radius:12px;padding:12px;border:1px solid var(--sable);min-width:200px;cursor:pointer;}
+.msg.me .msg-annonce{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);}
+.ma-header{font-size:.66rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.ma-img{width:100%;height:80px;border-radius:8px;background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:8px;}
+.ma-title{font-size:.78rem;font-weight:600;margin-bottom:3px;}
+.ma-price{font-size:.76rem;color:var(--vert);font-weight:700;}
+.msg.me .ma-title,.msg.me .ma-price{color:#fff;}
+.ma-btn{width:100%;margin-top:8px;padding:7px;border-radius:8px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;}
+.msg.me .ma-btn{background:rgba(255,255,255,.25);}
+
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 16px;}
+.typing-dots{display:flex;gap:4px;background:#fff;padding:10px 14px;border-radius:16px;border-bottom-left-radius:4px;border:1px solid rgba(232,224,208,.7);}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--gris);animation:typeDot 1.2s ease-in-out infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes typeDot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.typing-text{font-size:.72rem;color:var(--gris);}
+
+.chat-input-bar{display:flex;align-items:flex-end;gap:8px;padding:12px 14px;background:#fff;border-top:1px solid var(--sable);flex-shrink:0;}
+.chat-input-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--sable);background:var(--blanc);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;transition:all .2s;}
+.chat-input-btn:hover{background:var(--vert-p);border-color:var(--vert);}
+.chat-input-wrap{flex:1;background:var(--blanc);border:2px solid var(--sable);border-radius:20px;padding:8px 14px;transition:border-color .2s;}
+.chat-input-wrap:focus-within{border-color:var(--vert);}
+.chat-textarea{width:100%;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.88rem;resize:none;outline:none;max-height:100px;color:var(--noir);line-height:1.4;}
+.chat-send-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--vert);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;transition:all .2s;}
+.chat-send-btn:hover{background:var(--vert-c);transform:scale(1.08);}
+
+.emoji-picker{position:absolute;bottom:80px;right:14px;background:#fff;border:1px solid var(--sable);border-radius:16px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:100;width:280px;}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.emoji-grid span{font-size:1.3rem;cursor:pointer;padding:4px;border-radius:6px;transition:background .15s;}
+.emoji-grid span:hover{background:var(--blanc);}
+
+/* WA Modal */
+.wa-modal{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.wa-modal-box{background:#fff;border-radius:24px;padding:32px;max-width:360px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:popIn .3s ease;}
+.wa-modal-ico{font-size:3.5rem;margin-bottom:14px;}
+.wa-modal-box h3{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:6px;}
+.wa-modal-box p{color:var(--gris);font-size:.85rem;margin-bottom:14px;}
+.wa-number{background:var(--blanc);border:1px solid var(--sable);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.95rem;margin-bottom:18px;}
+.wa-modal-btns{display:flex;flex-direction:column;gap:10px;}
+.wa-btn-msg{padding:13px;border-radius:12px;border:none;background:#25d366;color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.wa-btn-msg:hover{background:#1db954;}
+.wa-btn-call{padding:13px;border-radius:12px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;}
+.wa-btn-close{margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--sable);background:transparent;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:.86rem;cursor:pointer;width:100%;}
+
+/* Share sheet */
+.share-sheet{position:fixed;bottom:0;left:0;right:0;z-index:9000;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;backdrop-filter:blur(4px);}
+.share-sheet-box{background:#fff;border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:500px;margin:0 auto;}
+.ss-title{font-weight:700;font-size:.95rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.ss-annonce-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--sable);border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s;}
+.ss-annonce-item:hover{border-color:var(--vert);background:var(--vert-p);}
+.ss-ai{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1a6b3c18,#2d9c5a36);display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.ss-at{font-weight:600;font-size:.84rem;color:var(--noir);}
+.ss-ap{font-size:.74rem;color:var(--vert);font-weight:600;}
+.ss-close{width:100%;padding:11px;border-radius:12px;border:1px solid var(--sable);background:transparent;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:.86rem;cursor:pointer;margin-top:10px;}
+
+/* Toast */
+.toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:9999;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.14);border-radius:11px;
+  padding:9px 18px;font-size:.8rem;color:#fff;
+  opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ══ VR STYLES (abbreviated) ══ */
+#scr-vr{background:#000;}
+#vr-viewer{position:absolute;inset:0;}
+#vr-measure-canvas{position:absolute;inset:0;z-index:30;pointer-events:none;}
+.measure-active #vr-measure-canvas{pointer-events:all;cursor:crosshair;}
+.m-point{position:fixed;z-index:40;width:13px;height:13px;border-radius:50%;background:var(--orange);border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5);animation:mpopIn .2s ease;}
+@keyframes mpopIn{from{transform:translate(-50%,-50%) scale(0)}to{transform:translate(-50%,-50%) scale(1)}}
+.m-label{position:fixed;z-index:45;background:var(--orange);color:#fff;padding:4px 9px;border-radius:7px;font-size:.72rem;font-weight:700;transform:translate(-50%,-130%);pointer-events:none;white-space:nowrap;}
+.vr-topbar{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);}
+.vr-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;border:none;background:none;cursor:pointer;}
+.vr-logo span{color:var(--orange);}
+.vr-prop-info{text-align:center;}
+.vr-prop-info h2{font-size:.88rem;font-weight:600;color:#fff;}
+.vr-prop-info p{font-size:.7rem;color:rgba(255,255,255,.55);margin-top:2px;}
+.vr-top-btns{display:flex;gap:9px;}
+.ico-btn{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:var(--glass);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;color:#fff;}
+.compass-wrap{position:absolute;top:72px;right:18px;z-index:50;width:44px;height:44px;}
+.room-nav{position:absolute;bottom:150px;left:50%;transform:translateX(-50%);z-index:50;display:flex;gap:9px;flex-wrap:wrap;justify-content:center;max-width:90vw;}
+.room-btn{padding:8px 16px;border-radius:50px;border:1px solid rgba(255,255,255,.2);background:var(--glass);backdrop-filter:blur(16px);color:#fff;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:500;cursor:pointer;transition:all .25s;}
+.room-btn.active{background:var(--vert);border-color:var(--vert);font-weight:600;}
+.vr-bottom{position:absolute;bottom:0;left:0;right:0;z-index:50;padding:13px 20px;background:linear-gradient(to top,rgba(0,0,0,.9),transparent);display:flex;align-items:center;justify-content:space-between;}
+.ctrl-group{display:flex;gap:9px;align-items:center;}
+.ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:var(--glass);backdrop-filter:blur(16px);cursor:pointer;color:#fff;font-size:1.1rem;}
+.ctrl-btn span{font-size:.6rem;color:rgba(255,255,255,.55);}
+.ctrl-btn.tool-on{background:var(--orange);border-color:var(--orange);}
+.vr-main-btn{padding:11px 22px;border-radius:50px;background:linear-gradient(135deg,var(--vert),var(--vert-c));border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;}
+.vr-back-btn{padding:9px 18px;border-radius:50px;border:1px solid rgba(255,255,255,.25);background:var(--glass);backdrop-filter:blur(12px);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;}
+.dim-panel{position:absolute;right:18px;top:80px;z-index:50;background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px;width:210px;display:none;}
+.dim-panel.show{display:block;}
+.dim-panel h3{font-size:.8rem;font-weight:700;margin-bottom:10px;color:rgba(255,255,255,.9);}
+.dim-room-name{font-size:.75rem;color:var(--orange);font-weight:600;margin-bottom:10px;}
+.dim-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.76rem;}
+.dim-row:last-child{border:none;}
+.dk{color:rgba(255,255,255,.48);}
+.dv{font-weight:700;color:var(--orange);}
+.dim-area{margin-top:11px;background:rgba(26,107,60,.25);border:1px solid rgba(26,107,60,.4);border-radius:9px;padding:9px;text-align:center;}
+.da-num{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--vert-c);}
+.da-lbl{font-size:.67rem;color:rgba(255,255,255,.45);}
+.measure-panel{position:absolute;left:18px;top:80px;z-index:50;background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px;width:220px;display:none;}
+.measure-panel.show{display:block;}
+.measure-panel h3{font-size:.8rem;font-weight:700;margin-bottom:5px;color:#fff;}
+.measure-inst{font-size:.72rem;color:rgba(255,255,255,.48);margin-bottom:13px;line-height:1.5;}
+.measure-list{display:flex;flex-direction:column;gap:7px;max-height:180px;overflow-y:auto;}
+.mi{background:rgba(255,255,255,.06);border-radius:9px;padding:8px 11px;display:flex;justify-content:space-between;}
+.mi-lbl{font-size:.72rem;color:rgba(255,255,255,.55);}
+.mi-val{font-size:.8rem;font-weight:700;color:var(--orange);}
+.btn-clear{margin-top:9px;width:100%;padding:7px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:transparent;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;font-size:.74rem;cursor:pointer;}
+.hotspot{position:absolute;z-index:35;width:42px;height:42px;border-radius:50%;border:3px solid rgba(255,255,255,.8);background:rgba(26,107,60,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;animation:vrpulse 2.5s ease-in-out infinite;transform:translate(-50%,-50%);}
+@keyframes vrpulse{0%,100%{box-shadow:0 0 0 0 rgba(26,107,60,.6)}50%{box-shadow:0 0 0 12px rgba(26,107,60,0)}}
+.hs-label{position:absolute;z-index:36;pointer-events:none;background:var(--glass);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);color:#fff;padding:5px 11px;border-radius:9px;font-size:.7rem;white-space:nowrap;transform:translate(-50%,-200%);}
+.cap-guide{position:absolute;inset:0;z-index:150;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);}
+.cap-guide.show{display:flex;}
+.guide-ring{width:180px;height:180px;border-radius:50%;border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;margin-bottom:22px;position:relative;}
+.guide-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(255,255,255,.18);animation:gspin 8s linear infinite;}
+@keyframes gspin{to{transform:rotate(360deg)}}
+.guide-icon-big{font-size:3.5rem;}
+.guide-text{text-align:center;}
+.guide-text h3{font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px;}
+.guide-text p{font-size:.78rem;color:rgba(255,255,255,.6);max-width:260px;line-height:1.6;}
+.guide-dots{display:flex;gap:7px;margin-top:18px;}
+.g-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);}
+.g-dot.done{background:var(--vert-c);}
+.g-dot.cur{background:var(--orange);}
+.btn-guide-next{margin-top:18px;padding:9px 26px;border-radius:50px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;}
+.hint-bar{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;display:flex;align-items:center;gap:9px;background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);border-radius:50px;padding:11px 22px;color:rgba(255,255,255,.78);font-size:.8rem;animation:hintFade 4s ease forwards;pointer-events:none;}
+@keyframes hintFade{0%,60%{opacity:1}100%{opacity:0}}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1024px){
+  .cat-grid{grid-template-columns:repeat(2,1fr);}
+  .listings-grid{grid-template-columns:repeat(2,1fr);}
+  .pay-body{grid-template-columns:1fr;}
+  .pay-sidebar{position:static;}
+  .est-form{grid-template-columns:1fr 1fr;}
+  .foot-grid{grid-template-columns:1fr 1fr;}
+  .ai-profile-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:700px){
+  .nav-links{display:none;}
+  .listings-grid{grid-template-columns:1fr;}
+  .s-inputs{grid-template-columns:1fr;}
+  .cat-grid{grid-template-columns:1fr 1fr;}
+  .chat-layout{grid-template-columns:1fr;}
+  .chat-sidebar{display:none;}
+  .chat-sidebar.mobile-show{display:flex;position:fixed;inset:0;z-index:500;}
+  .conv-back{display:flex!important;}
+  .ai-profile-grid{grid-template-columns:1fr 1fr;}
+  .est-form{grid-template-columns:1fr;}
+  .foot-grid{grid-template-columns:1fr;}
+  .ai-card{flex-direction:column;}
+  .ai-card-img{width:100%;height:120px;}
+  .pay-phone-wrap{flex-direction:column;}
+  .otp-inputs .otp-input{width:40px;height:46px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-logo">Immo<span>CI</span></div>
+  <div class="ld-sub">Chargement de la plateforme...</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FLOATING CHAT BUTTON -->
+<div id="chat-fab" onclick="goto('scr-chat')">
+  <span class="fab-ico">💬</span>
+  <span class="fab-badge" id="fab-badge">3</span>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 1 — ACCUEIL
+══════════════════════════════════ -->
+<div class="screen active" id="scr-home">
+  <nav class="topnav">
+    <button class="logo" onclick="goto('scr-home')">Immo<span>CI</span></button>
+    <ul class="nav-links">
+      <li onclick="goto('scr-listings')">Location</li>
+      <li onclick="goto('scr-ai')">🤖 IA Recommandations</li>
+      <li onclick="goto('scr-payment')">💳 Paiement</li>
+      <li onclick="goto('scr-chat')">💬 Messages</li>
+    </ul>
+    <div class="nav-right">
+      <button class="nav-btn outline" onclick="showToast('🔐 Connexion bientôt disponible !')">Connexion</button>
+      <button class="nav-btn solid" onclick="goto('scr-publish')">Publier</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🇨🇮 La plateforme immobilière N°1 en Côte d'Ivoire</div>
+      <h1>Trouvez votre <em>bien idéal</em> en Côte d'Ivoire</h1>
+      <p>Location, résidences meublées, achat et vente — avec visite 360°, IA de recommandation et paiement caution en ligne.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="goto('scr-listings')">🔍 Chercher un bien</button>
+        <button class="btn-ghost" onclick="goto('scr-ai')">🤖 Recommandations IA</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num">2 400+</div><div class="stat-lbl">Annonces actives</div></div>
+        <div><div class="stat-num">🤖 IA</div><div class="stat-lbl">Recommandations</div></div>
+        <div><div class="stat-num">💳 CI</div><div class="stat-lbl">Paiement local</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI BANNER -->
+  <div class="ai-banner" style="margin-top:28px;">
+    <div class="ai-banner-inner">
+      <div class="ai-banner-ico">🤖</div>
+      <div class="ai-banner-text">
+        <h3>Laissez l'IA trouver votre bien parfait</h3>
+        <p>Renseignez votre profil en 30 secondes, notre IA analyse 2 400+ annonces et vous propose les meilleures correspondances personnalisées.</p>
+      </div>
+      <button class="ai-banner-btn" onclick="goto('scr-ai')">Essayer gratuitement →</button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <div class="search-card">
+      <div class="s-tabs">
+        <button class="s-tab on" onclick="setTab(this)">🏠 Location</button>
+        <button class="s-tab" onclick="setTab(this)">🛋️ Résidence meublée</button>
+        <button class="s-tab" onclick="setTab(this)">🏗️ Achat / Vente</button>
+        <button class="s-tab" onclick="setTab(this)">📊 Estimation</button>
+      </div>
+      <div class="s-inputs">
+        <div class="sf"><label>Ville / Commune</label>
+          <select><option>Abidjan – Cocody</option><option>Abidjan – Plateau</option><option>Abidjan – Marcory</option><option>Bouaké</option><option>Yamoussoukro</option></select></div>
+        <div class="sf"><label>Type de bien</label>
+          <select><option>Appartement</option><option>Villa</option><option>Studio</option><option>Duplex</option></select></div>
+        <div class="sf"><label>Budget max (FCFA)</label>
+          <input type="text" placeholder="Ex : 300 000 / mois"></div>
+        <button class="btn-search" onclick="goto('scr-listings')">🔍 Rechercher</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <section class="section">
+    <div class="sec-tag">Explorer par catégorie</div>
+    <h2 class="sec-title">Que cherchez-vous aujourd'hui ?</h2>
+    <div class="cat-grid">
+      <div class="cat-card cat-g" onclick="goto('scr-listings')"><div class="cat-cnt">1 240 offres</div><div class="cat-ico">🏢</div><h3>Location</h3><p>Studios, F2, F3, villas à louer</p></div>
+      <div class="cat-card cat-o" onclick="goto('scr-listings')"><div class="cat-cnt">380 offres</div><div class="cat-ico">🛋️</div><h3>Résidences meublées</h3><p>Séjour court ou long terme</p></div>
+      <div class="cat-card cat-d" onclick="goto('scr-vr')"><div class="cat-cnt">🆕</div><div class="cat-ico">🥽</div><h3>Visite 360° VR</h3><p>Visitez en réalité virtuelle avec mesures</p></div>
+      <div class="cat-card cat-ai" onclick="goto('scr-ai')"><div class="cat-cnt">🤖 IA</div><div class="cat-ico">✨</div><h3>IA Recommandations</h3><p>L'IA trouve votre bien parfait selon votre profil</p></div>
+    </div>
+  </section>
+
+  <!-- LISTINGS -->
+  <section class="section" style="padding-top:0">
+    <div class="sec-head">
+      <div><div class="sec-tag">Annonces récentes</div><h2 class="sec-title">Les dernières offres</h2></div>
+      <button class="see-all" onclick="goto('scr-listings')">Voir toutes →</button>
+    </div>
+    <div class="listings-grid">
+      <div class="l-card" onclick="goto('scr-detail')">
+        <div class="l-img"><div class="l-bg apt">🏢</div><span class="l-badge b-loc">Location</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div>
+        <div class="l-body"><div class="l-price">250 000 <span>FCFA/mois</span></div><div class="l-title">Appartement F3 moderne avec balcon</div><div class="l-loc">📍 Cocody – Riviera 3, Abidjan</div><div class="l-feats"><span class="feat">🛏️ 3 ch.</span><span class="feat">🚿 2 SDB</span><span class="feat">🚗 Parking</span></div>
+        <div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 Visite 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Caution</button></div></div>
+      </div>
+      <div class="l-card" onclick="goto('scr-detail')">
+        <div class="l-img"><div class="l-bg meu">🛋️</div><span class="l-badge b-meu">Meublé</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div>
+        <div class="l-body"><div class="l-price">85 000 <span>FCFA/nuit</span></div><div class="l-title">Suite meublée tout confort – Plateau</div><div class="l-loc">📍 Plateau, Abidjan</div><div class="l-feats"><span class="feat">🛏️ 2 ch.</span><span class="feat">📶 Wifi</span><span class="feat">❄️ Clim.</span></div>
+        <div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 Visite 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Réserver</button></div></div>
+      </div>
+      <div class="l-card" onclick="goto('scr-detail')">
+        <div class="l-img"><div class="l-bg vil">🏡</div><span class="l-badge b-ven">Vente</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div>
+        <div class="l-body"><div class="l-price">85 000 000 <span>FCFA</span></div><div class="l-title">Villa duplex avec piscine – Zone 4</div><div class="l-loc">📍 Marcory – Zone 4, Abidjan</div><div class="l-feats"><span class="feat">🛏️ 5 ch.</span><span class="feat">🏊 Piscine</span><span class="feat">🌿 Jardin</span></div>
+        <div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 Visite 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Acompte</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="est-band">
+    <div class="sec-tag">Outil gratuit</div>
+    <h2 class="sec-title">Estimez votre bien immobilier</h2>
+    <p>Obtenez une estimation rapide basée sur les prix du marché ivoirien.</p>
+    <div class="est-form">
+      <div><label class="est-lbl">Type</label><select class="est-inp"><option>Appartement</option><option>Villa</option><option>Terrain</option></select></div>
+      <div><label class="est-lbl">Commune</label><select class="est-inp"><option>Cocody</option><option>Plateau</option><option>Marcory</option></select></div>
+      <div><label class="est-lbl">Surface (m²)</label><input type="number" class="est-inp" placeholder="120"></div>
+      <button class="btn-primary" onclick="showToast('📊 Estimation : 42 500 000 FCFA — Basé sur 48 biens similaires')">Estimer →</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <div class="foot-brand"><span class="foot-logo">Immo<span>CI</span></span><p>La plateforme immobilière N°1 en Côte d'Ivoire. Location, vente, visite 360°, IA et paiement local.</p></div>
+      <div class="foot-col"><h4>Explorer</h4><ul><li><a onclick="goto('scr-listings')">Location</a></li><li><a onclick="goto('scr-ai')">🤖 Recommandations IA</a></li><li><a onclick="goto('scr-vr')">Visite 360° VR</a></li><li><a onclick="goto('scr-payment')">Paiement caution</a></li></ul></div>
+      <div class="foot-col"><h4>Villes</h4><ul><li><a>Abidjan</a></li><li><a>Bouaké</a></li><li><a>Yamoussoukro</a></li><li><a>San-Pédro</a></li></ul></div>
+      <div class="foot-col"><h4>ImmoCI</h4><ul><li><a>À propos</a></li><li><a onclick="goto('scr-chat')">💬 Messages</a></li><li><a>Conditions</a></li><li><a>Contact</a></li></ul></div>
+    </div>
+    <div class="foot-bot"><span>© 2026 ImmoCI – Tous droits réservés</span><span>🇨🇮 Made in Côte d'Ivoire</span></div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2 — IA RECOMMANDATIONS
+══════════════════════════════════ -->
+<div class="screen" id="scr-ai">
+  <nav class="topnav">
+    <button class="logo" onclick="goto('scr-home')">Immo<span>CI</span></button>
+    <ul class="nav-links"><li onclick="goto('scr-home')">← Accueil</li><li onclick="goto('scr-listings')">Toutes les annonces</li></ul>
+    <div class="nav-right"><button class="nav-btn solid" onclick="goto('scr-publish')">Publier</button></div>
+  </nav>
+  <div class="ai-screen-header">
+    <h1>🤖 Recommandations personnalisées</h1>
+    <p>Dites-nous ce que vous cherchez, notre IA analyse 2 400+ annonces et vous propose les meilleures correspondances en temps réel.</p>
+  </div>
+
+  <div class="ai-profile-card">
+    <div class="ai-profile-title">✨ Votre profil de recherche</div>
+    <div style="font-size:.76rem;color:var(--gris);margin-bottom:14px;">Sélectionnez vos préférences — plus vous renseignez, mieux l'IA vous correspond :</div>
+
+    <div style="font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Type de bien recherché</div>
+    <div class="ai-profile-grid" style="margin-bottom:16px;">
+      <button class="ai-pref-btn sel" onclick="togglePref(this)">🏢 Appartement</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🏡 Villa</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🛏️ Studio</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🛋️ Meublé</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🏗️ Achat</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🏘️ Duplex</button>
+    </div>
+
+    <div style="font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Zone préférée</div>
+    <div class="ai-profile-grid" style="margin-bottom:16px;">
+      <button class="ai-pref-btn sel" onclick="togglePref(this)">📍 Cocody</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📍 Plateau</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📍 Marcory</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📍 Yopougon</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📍 Bingerville</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📍 Bouaké</button>
+    </div>
+
+    <div style="font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Équipements importants</div>
+    <div class="ai-profile-grid" style="margin-bottom:16px;">
+      <button class="ai-pref-btn sel" onclick="togglePref(this)">❄️ Climatisation</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">📶 Wifi</button>
+      <button class="ai-pref-btn sel" onclick="togglePref(this)">🚗 Parking</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">🏊 Piscine</button>
+      <button class="ai-pref-btn" onclick="togglePref(this)">⚡ Groupe élec.</button>
+      <button class="ai-pref-btn sel" onclick="togglePref(this)">🥽 Visite 360°</button>
+    </div>
+
+    <div class="ai-budget-row">
+      <label>Budget max :</label>
+      <input type="number" class="ai-budget-input" placeholder="500 000" id="ai-budget">
+      <span style="font-size:.82rem;color:var(--gris);white-space:nowrap;">FCFA / mois</span>
+    </div>
+    <div class="ai-budget-row">
+      <label>Chambres min :</label>
+      <select class="ai-budget-input" style="width:auto;min-width:120px;">
+        <option>1 chambre</option><option selected>2 chambres</option>
+        <option>3 chambres</option><option>4+ chambres</option>
+      </select>
+    </div>
+
+    <button class="btn-ai-search" onclick="runAiSearch()">
+      🤖 Lancer la recherche IA
+    </button>
+  </div>
+
+  <!-- AI RESULTS -->
+  <div class="ai-results-section" id="ai-results" style="display:none;">
+    <div class="ai-results-title">
+      <span>✨ Résultats IA</span>
+      <span style="font-size:.78rem;color:var(--gris);font-family:'DM Sans',sans-serif;font-weight:400;" id="ai-result-count"></span>
+    </div>
+    <div style="font-size:.78rem;color:var(--gris);margin-bottom:14px;" id="ai-result-sub"></div>
+    <div class="ai-score-bar"><div class="ai-score-fill" id="ai-score-fill" style="width:0%"></div></div>
+    <div id="ai-cards-container"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 3 — LISTINGS
+══════════════════════════════════ -->
+<div class="screen" id="scr-listings">
+  <nav class="topnav">
+    <button class="logo" onclick="goto('scr-home')">Immo<span>CI</span></button>
+    <ul class="nav-links"><li onclick="goto('scr-home')">Accueil</li><li onclick="goto('scr-ai')">🤖 IA</li><li onclick="goto('scr-payment')">💳 Paiement</li></ul>
+    <div class="nav-right"><button class="nav-btn solid" onclick="goto('scr-publish')">Publier</button></div>
+  </nav>
+  <div style="background:linear-gradient(135deg,#0a1f11,#1a6b3c);padding:40px 5%;display:flex;align-items:center;gap:18px;">
+    <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">🏘️</div>
+    <div><h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3vw,2rem);color:#fff;font-weight:700;">Toutes les annonces</h1><p style="color:rgba(255,255,255,.65);font-size:.84rem;margin-top:4px;">2 406 biens disponibles en Côte d'Ivoire</p></div>
+  </div>
+  <div style="display:grid;grid-template-columns:260px 1fr;gap:22px;padding:26px 5%;max-width:1300px;margin:0 auto;">
+    <div style="background:#fff;border-radius:18px;padding:20px;border:1px solid rgba(232,224,208,.6);box-shadow:0 2px 10px rgba(0,0,0,.04);align-self:start;position:sticky;top:80px;">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:16px;">🔧 Filtres</div>
+      <div style="margin-bottom:14px;"><label style="display:block;font-size:.68rem;font-weight:600;color:var(--gris);text-transform:uppercase;margin-bottom:6px;">Transaction</label><select style="width:100%;padding:9px 12px;border:2px solid var(--sable);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:var(--blanc);outline:none;"><option>Tous</option><option>Location</option><option>Meublé</option><option>Vente</option></select></div>
+      <div style="margin-bottom:14px;"><label style="display:block;font-size:.68rem;font-weight:600;color:var(--gris);text-transform:uppercase;margin-bottom:6px;">Ville</label><select style="width:100%;padding:9px 12px;border:2px solid var(--sable);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:var(--blanc);outline:none;"><option>Toutes</option><option>Abidjan</option><option>Bouaké</option></select></div>
+      <div style="margin-bottom:14px;"><label style="display:block;font-size:.68rem;font-weight:600;color:var(--gris);text-transform:uppercase;margin-bottom:6px;">Budget max (FCFA)</label><input type="number" placeholder="500 000" style="width:100%;padding:9px 12px;border:2px solid var(--sable);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.83rem;outline:none;"></div>
+      <button style="width:100%;padding:11px;border-radius:11px;border:none;background:var(--vert);color:#fff;font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;">Appliquer</button>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-size:.88rem;font-weight:600;"><span style="color:var(--vert);">2 406</span> biens trouvés</div>
+        <select style="padding:7px 12px;border:2px solid var(--sable);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.8rem;background:var(--blanc);outline:none;"><option>Plus récents</option><option>Prix croissant</option></select>
+      </div>
+      <div class="listings-grid">
+        <div class="l-card" onclick="goto('scr-detail')"><div class="l-img"><div class="l-bg apt">🏢</div><span class="l-badge b-loc">Location</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div><div class="l-body"><div class="l-price">250 000 <span>FCFA/mois</span></div><div class="l-title">Appartement F3 moderne</div><div class="l-loc">📍 Cocody Riviera 3</div><div class="l-feats"><span class="feat">🛏️ 3</span><span class="feat">🚿 2</span><span class="feat">🚗</span></div><div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Caution</button></div></div></div>
+        <div class="l-card" onclick="goto('scr-detail')"><div class="l-img"><div class="l-bg meu">🛋️</div><span class="l-badge b-meu">Meublé</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div><div class="l-body"><div class="l-price">85 000 <span>FCFA/nuit</span></div><div class="l-title">Suite meublée Plateau</div><div class="l-loc">📍 Plateau, Abidjan</div><div class="l-feats"><span class="feat">🛏️ 2</span><span class="feat">📶</span><span class="feat">❄️</span></div><div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Réserver</button></div></div></div>
+        <div class="l-card" onclick="goto('scr-detail')"><div class="l-img"><div class="l-bg vil">🏡</div><span class="l-badge b-ven">Vente</span><button class="l-fav" onclick="event.stopPropagation();this.textContent=this.textContent=='🤍'?'❤️':'🤍'">🤍</button><div class="vr-chip">🥽 360°</div></div><div class="l-body"><div class="l-price">85 000 000 <span>FCFA</span></div><div class="l-title">Villa duplex piscine</div><div class="l-loc">📍 Marcory Zone 4</div><div class="l-feats"><span class="feat">🛏️ 5</span><span class="feat">🏊</span><span class="feat">🌿</span></div><div class="l-card-btns"><button class="lc-btn lc-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 360°</button><button class="lc-btn lc-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Acompte</button></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 4 — PAIEMENT
+══════════════════════════════════ -->
+<div class="screen" id="scr-payment">
+  <nav class="topnav">
+    <button class="logo" onclick="goto('scr-home')">Immo<span>CI</span></button>
+    <ul class="nav-links"><li onclick="goto('scr-detail')">← Retour à l'annonce</li></ul>
+    <div class="nav-right"><span style="font-size:.76rem;color:var(--vert);font-weight:700;background:var(--vert-p);padding:6px 13px;border-radius:50px;">🔒 Paiement sécurisé</span></div>
+  </nav>
+  <div class="pay-screen-header">
+    <div class="ph-icon">💳</div>
+    <div><h1>Paiement caution en ligne</h1><p>Orange Money · Wave · MTN · Carte bancaire — Sécurisé & instantané</p></div>
+  </div>
+
+  <div class="pay-body">
+    <div>
+      <!-- Success screen (hidden by default) -->
+      <div class="pay-success" id="pay-success">
+        <div class="pay-success-ico">🎉</div>
+        <h2>Paiement réussi !</h2>
+        <p>Votre caution a été enregistrée et le propriétaire a été notifié. Vous pouvez maintenant planifier votre visite.</p>
+        <div class="pay-receipt">
+          <div class="receipt-row"><span class="rr-lbl">Transaction ID</span><span class="rr-val">#ICI-2026-4821</span></div>
+          <div class="receipt-row"><span class="rr-lbl">Bien</span><span class="rr-val">Appt F3 – Cocody</span></div>
+          <div class="receipt-row"><span class="rr-lbl">Montant payé</span><span class="rr-val" style="color:var(--vert);">250 000 FCFA</span></div>
+          <div class="receipt-row"><span class="rr-lbl">Méthode</span><span class="rr-val" id="receipt-method">Orange Money</span></div>
+          <div class="receipt-row"><span class="rr-lbl">Date</span><span class="rr-val">22 Avr. 2026 · 14h32</span></div>
+          <div class="receipt-row"><span class="rr-lbl">Statut</span><span class="rr-val" style="color:#22c55e;">✅ Confirmé</span></div>
+        </div>
+        <div class="pay-success-btns">
+          <button class="btn-primary" onclick="goto('scr-chat')">💬 Contacter le propriétaire</button>
+          <button class="nav-btn outline" onclick="goto('scr-home')" style="color:var(--vert);">Retour à l'accueil</button>
+        </div>
+      </div>
+
+      <!-- Payment form -->
+      <div id="pay-form-area">
+        <div class="pay-card">
+          <div class="pay-card-title">🏠 Bien concerné</div>
+          <div class="pay-prop-summary">
+            <div class="pps-img">🏢</div>
+            <div><div class="pps-name">Appartement F3 – Cocody Riviera 3</div><div class="pps-loc">📍 Abidjan · Konan Adjoua</div></div>
+            <div class="pps-price">250 000 FCFA<span style="font-size:.65rem;font-family:'DM Sans',sans-serif;color:var(--gris);display:block;text-align:right;">/mois</span></div>
+          </div>
+          <div class="amount-rows">
+            <div class="amount-row"><span class="ar-lbl">Caution (1 mois)</span><span class="ar-val">250 000 FCFA</span></div>
+            <div class="amount-row"><span class="ar-lbl">Frais de service ImmoCI</span><span class="ar-val">2 500 FCFA</span></div>
+            <div class="amount-row"><span class="ar-lbl">Frais de transaction</span><span class="ar-val">0 FCFA</span></div>
+            <div class="amount-row total"><span class="ar-lbl">Total à payer</span><span class="ar-val">252 500 FCFA</span></div>
+          </div>
+        </div>
+
+        <div class="pay-card">
+          <div class="pay-card-title">💳 Choisir le moyen de paiement</div>
+          <div class="pay-card-sub">Tous les paiements sont sécurisés et instantanés</div>
+          <div class="pay-methods">
+            <div class="pay-method sel-om" onclick="selectPayMethod(this,'om','Orange Money')" id="pm-om">
+              <div class="pm-logo om">🟠</div>
+              <div class="pm-info"><div class="pm-name">Orange Money</div><div class="pm-desc">Paiement instantané · +225 0X XX XX XX</div></div>
+              <div class="pm-radio"></div>
+            </div>
+            <div class="pay-method" onclick="selectPayMethod(this,'wave','Wave')" id="pm-wave">
+              <div class="pm-logo wave">🌊</div>
+              <div class="pm-info"><div class="pm-name">Wave</div><div class="pm-desc">Paiement instantané · Sans frais</div></div>
+              <div class="pm-radio"></div>
+            </div>
+            <div class="pay-method" onclick="selectPayMethod(this,'mtn','MTN Mobile Money')" id="pm-mtn">
+              <div class="pm-logo" style="background:linear-gradient(135deg,#ffd700,#e6a800);">💛</div>
+              <div class="pm-info"><div class="pm-name">MTN Mobile Money</div><div class="pm-desc">Paiement instantané · MTN CI</div></div>
+              <div class="pm-radio"></div>
+            </div>
+            <div class="pay-method" onclick="selectPayMethod(this,'card','Carte bancaire')" id="pm-card">
+              <div class="pm-logo card">💳</div>
+              <div class="pm-info"><div class="pm-name">Carte bancaire</div><div class="pm-desc">Visa · Mastercard · 3D Secure</div></div>
+              <div class="pm-radio"></div>
+            </div>
+          </div>
+
+          <!-- Phone field for mobile money -->
+          <div class="pay-phone-field" id="pay-phone-field">
+            <label class="pay-phone-label">Numéro <span id="pay-method-name">Orange Money</span></label>
+            <div class="pay-phone-wrap">
+              <select class="pay-country-code"><option>🇨🇮 +225</option><option>🇸🇳 +221</option><option>🇧🇫 +226</option><option>🇲🇱 +223</option></select>
+              <input type="tel" class="pay-phone-input" id="pay-phone-input" placeholder="07 58 34 21 00">
+            </div>
+          </div>
+
+          <!-- OTP Section -->
+          <div class="otp-section" id="otp-section">
+            <div class="otp-ico">📱</div>
+            <div class="otp-title">Confirmation par SMS</div>
+            <div class="otp-desc">Un code à 6 chiffres a été envoyé au <strong id="otp-phone-display">+225 07 58 34 21 00</strong>. Entrez-le ci-dessous pour confirmer votre paiement.</div>
+            <div class="otp-inputs">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,0)">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,1)">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,2)">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,3)">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,4)">
+              <input class="otp-input" maxlength="1" oninput="otpNav(this,5)">
+            </div>
+            <button id="btn-confirm-pay" class="btn-pay-now btn-pay-om" onclick="confirmPayment()">✅ Confirmer le paiement</button>
+          </div>
+
+          <!-- Pay button -->
+          <button class="btn-pay-now btn-pay-om" id="btn-pay-now" onclick="initPayment()" style="margin-top:16px;">
+            🟠 Payer 252 500 FCFA avec Orange Money
+          </button>
+          <div class="pay-secure-note">🔒 Paiement sécurisé SSL · Remboursement garanti sous 48h en cas de litige</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="pay-sidebar">
+      <div class="pay-trust-card">
+        <div class="ptc-title">🛡️ Paiement sécurisé ImmoCI</div>
+        <div class="trust-item"><span>✅</span> Votre caution est conservée par ImmoCI jusqu'à la remise des clés. Elle est remboursable en cas de désistement du propriétaire.</div>
+        <div class="trust-item"><span>🔒</span> Transactions chiffrées SSL 256 bits. Vos données bancaires ne sont jamais stockées.</div>
+        <div class="trust-item"><span>📞</span> Support ImmoCI disponible 7j/7 en cas de litige.</div>
+        <div class="trust-item"><span>⚡</span> Confirmation instantanée par SMS et email dès le paiement effectué.</div>
+      </div>
+      <div class="pay-trust-card">
+        <div class="ptc-title">💳 Partenaires de paiement</div>
+        <div class="pay-partners">
+          <div class="partner-badge pb-om">🟠 Orange Money</div>
+          <div class="partner-badge pb-wave">🌊 Wave</div>
+          <div class="partner-badge pb-mtn">💛 MTN MoMo</div>
+          <div class="partner-badge pb-moov">🔵 Moov Money</div>
+        </div>
+        <div style="font-size:.74rem;color:var(--gris);margin-top:12px;line-height:1.6;">Paiements traités par <strong>CinetPay</strong> — Leader du paiement digital en Côte d'Ivoire depuis 2012.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 5 — CHAT
+══════════════════════════════════ -->
+<div class="screen" id="scr-chat">
+  <div class="chat-layout">
+    <div class="chat-sidebar" id="chat-sidebar">
+      <div class="chat-sidebar-header">
+        <div><div class="chat-sidebar-title">💬 Messages</div><div class="chat-sidebar-sub">Toutes vos conversations</div></div>
+        <button class="chat-close-btn" onclick="goto('scr-home')">✕</button>
+      </div>
+      <div class="chat-search-wrap">
+        <span class="chat-search-ico">🔍</span>
+        <input class="chat-search-input" type="text" placeholder="Rechercher..." oninput="filterConvs(this.value)">
+      </div>
+      <div class="conv-tabs">
+        <button class="conv-tab active" onclick="setConvTab(this,'all')">Tous</button>
+        <button class="conv-tab" onclick="setConvTab(this,'prop')">Propriétaires</button>
+        <button class="conv-tab" onclick="setConvTab(this,'group')">Groupes</button>
+        <button class="conv-tab" onclick="setConvTab(this,'support')">Support</button>
+      </div>
+      <div class="conv-list" id="conv-list"></div>
+      <div class="new-group-btn" onclick="showToast('🏘️ Fonctionnalité groupe — Bientôt disponible !')">➕ Nouveau groupe de quartier</div>
+    </div>
+
+    <div class="chat-main" id="chat-main">
+      <div class="chat-empty" id="chat-empty">
+        <div class="chat-empty-ico">💬</div>
+        <h3>Vos messages ImmoCI</h3>
+        <p>Discutez avec les propriétaires, partagez des annonces, envoyez des photos et contactez le support.</p>
+        <button class="btn-start-chat" onclick="openConv(0)">Commencer à discuter</button>
+      </div>
+      <div class="chat-conv" id="chat-conv" style="display:none;">
+        <div class="conv-header">
+          <button class="conv-back" onclick="showChatEmpty()">←</button>
+          <div class="conv-avatar prop" id="conv-avatar">👤</div>
+          <div class="conv-info">
+            <div class="conv-name" id="conv-name">Konan Adjoua</div>
+            <div class="conv-status" id="conv-status">🟢 En ligne</div>
+          </div>
+          <div class="conv-actions">
+            <button class="conv-action-btn" onclick="openWAModal()" title="WhatsApp">💚</button>
+            <button class="conv-action-btn" onclick="openWAModal()" title="Appel WhatsApp">📞</button>
+            <button class="conv-action-btn" onclick="goto('scr-payment')" title="Payer caution">💳</button>
+            <button class="conv-action-btn" onclick="showToast('ℹ️ Infos du contact')" title="Info">ℹ️</button>
+          </div>
+        </div>
+        <div class="pinned-annonce" onclick="goto('scr-detail')">
+          <div class="pa-img">🏢</div>
+          <div class="pa-info"><div class="pa-title">Appartement F3 – Cocody Riviera 3</div><div class="pa-price">250 000 FCFA / mois</div></div>
+          <button class="pa-view-btn">Voir →</button>
+        </div>
+        <div class="messages-area" id="messages-area"></div>
+        <div class="typing-indicator" id="typing-indicator" style="display:none;">
+          <div class="conv-avatar prop" style="width:28px;height:28px;font-size:.8rem;">👤</div>
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+          <span class="typing-text" id="typing-name-txt">écrit...</span>
+        </div>
+        <div style="position:relative;">
+          <div class="emoji-picker" id="emoji-picker" style="display:none;">
+            <div class="emoji-grid" id="emoji-grid"></div>
+          </div>
+          <div class="chat-input-bar">
+            <button class="chat-input-btn" onclick="triggerPhotoUpload()" title="Photo">📷</button>
+            <input type="file" id="chat-photo-input" accept="image/*" style="display:none" onchange="sendPhoto(this)">
+            <button class="chat-input-btn" onclick="openShareSheet()" title="Partager annonce">🏠</button>
+            <div class="chat-input-wrap">
+              <textarea class="chat-textarea" id="chat-textarea" placeholder="Écrivez un message..." rows="1"
+                onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+            </div>
+            <button class="chat-input-btn" onclick="toggleEmoji()">😊</button>
+            <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 6 — VR 360°
+══════════════════════════════════ -->
+<div class="screen" id="scr-vr">
+  <div id="vr-viewer"></div>
+  <canvas id="vr-measure-canvas"></canvas>
+  <div class="hotspot" style="left:32%;top:47%;" onclick="vrLoadRoom(1)">→</div>
+  <div class="hs-label" style="left:32%;top:47%;">Aller cuisine</div>
+  <div class="hotspot" style="left:68%;top:49%;" onclick="vrLoadRoom(2)">→</div>
+  <div class="hs-label" style="left:68%;top:49%;">Couloir chambres</div>
+  <div class="vr-topbar">
+    <button class="vr-logo" onclick="goto('scr-home')">Immo<span>CI</span></button>
+    <div class="vr-prop-info"><h2>Appartement F4 – Cocody Riviera</h2><p>📍 Abidjan · 120 m²</p></div>
+    <div class="vr-top-btns">
+      <div class="ico-btn" onclick="vrToggleDim()">📐</div>
+      <div class="ico-btn" onclick="showToast('🔗 Lien copié !')">🔗</div>
+      <div class="ico-btn" onclick="goto('scr-detail')">✕</div>
+    </div>
+  </div>
+  <div class="compass-wrap"><svg viewBox="0 0 48 48" id="vr-compass"><circle cx="24" cy="24" r="22" fill="rgba(0,0,0,.5)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><polygon points="24,4 28,24 24,22 20,24" fill="#f4821f" id="compass-needle"/><polygon points="24,44 28,24 24,26 20,24" fill="rgba(255,255,255,.38)"/><text x="24" y="14" text-anchor="middle" fill="white" font-size="7" font-family="DM Sans">N</text></svg></div>
+  <div class="room-nav">
+    <button class="room-btn active" onclick="vrLoadRoom(0)">🛋️ Salon</button>
+    <button class="room-btn" onclick="vrLoadRoom(1)">🍳 Cuisine</button>
+    <button class="room-btn" onclick="vrLoadRoom(2)">🛏️ Chambre 1</button>
+    <button class="room-btn" onclick="vrLoadRoom(3)">🛏️ Chambre 2</button>
+    <button class="room-btn" onclick="vrLoadRoom(4)">🚿 Salle de bain</button>
+    <button class="room-btn" onclick="vrLoadRoom(5)">🏠 Terrasse</button>
+  </div>
+  <div class="vr-bottom">
+    <div class="ctrl-group">
+      <div class="ctrl-btn" onclick="vrToggleMeasure()" id="vr-btn-measure">📏<span>Mesurer</span></div>
+      <div class="ctrl-btn" onclick="vrToggleAuto()" id="vr-btn-auto">🔄<span>Auto</span></div>
+    </div>
+    <button class="vr-main-btn" onclick="showToast('🥽 Placez votre téléphone dans un casque VR !')">🥽 Mode VR</button>
+    <div class="ctrl-group">
+      <button class="vr-back-btn" onclick="goto('scr-detail')">← Retour</button>
+      <div class="ctrl-btn" onclick="vrZoomIn()">🔍+<span>Zoom</span></div>
+      <div class="ctrl-btn" onclick="vrReset()">🧭<span>Réinit.</span></div>
+    </div>
+  </div>
+  <div class="dim-panel" id="vr-dim-panel">
+    <h3>📐 Dimensions</h3>
+    <div class="dim-room-name" id="vr-dim-room">🛋️ Salon principal</div>
+    <div class="dim-row"><span class="dk">Longueur</span><span class="dv" id="vr-dL">6,80 m</span></div>
+    <div class="dim-row"><span class="dk">Largeur</span><span class="dv" id="vr-dW">5,20 m</span></div>
+    <div class="dim-row"><span class="dk">Hauteur</span><span class="dv" id="vr-dH">2,85 m</span></div>
+    <div class="dim-row"><span class="dk">Surface</span><span class="dv" id="vr-dA">35,36 m²</span></div>
+    <div class="dim-area"><div class="da-num" id="vr-dA2">35,36</div><div class="da-lbl">m² — Surface au sol</div></div>
+  </div>
+  <div class="measure-panel" id="vr-measure-panel">
+    <h3>📏 Mesure</h3>
+    <div class="measure-inst">Cliquez 2 points pour mesurer une distance</div>
+    <div class="measure-list" id="vr-measure-list"><div style="font-size:.72rem;color:rgba(255,255,255,.3);text-align:center;padding:9px;">Aucune mesure</div></div>
+    <button class="btn-clear" onclick="vrClearMeasures()">🗑️ Effacer</button>
+  </div>
+  <div class="cap-guide" id="vr-cap-guide">
+    <div class="guide-ring"><div class="guide-icon-big" id="guide-big-ico">🌐</div></div>
+    <div class="guide-text"><h3 id="guide-title">Photo 360°</h3><p id="guide-desc">Restez immobile et tournez lentement.</p></div>
+    <div class="guide-dots" id="guide-dots"></div>
+    <button class="btn-guide-next" onclick="vrNextGuide()">Suivant →</button>
+  </div>
+  <div class="hint-bar">🖱️ Glissez pour regarder · 🔍 Zoom · 📏 Mesurez</div>
+</div>
+
+<!-- WA Modal -->
+<div class="wa-modal" id="wa-modal" style="display:none;" onclick="closeWAModal()">
+  <div class="wa-modal-box" onclick="event.stopPropagation()">
+    <div class="wa-modal-ico">💚</div>
+    <h3>Contacter via WhatsApp</h3>
+    <p id="wa-modal-name">Konan Adjoua · Propriétaire</p>
+    <div class="wa-number">+225 07 58 34 21 00</div>
+    <div class="wa-modal-btns">
+      <button class="wa-btn-msg" onclick="window.open('https://wa.me/2250758342100?text=Bonjour%2C+je+suis+int%C3%A9ress%C3%A9+par+votre+annonce+sur+ImmoCI','_blank');closeWAModal()">💬 Envoyer un message WhatsApp</button>
+      <button class="wa-btn-call" onclick="window.open('https://wa.me/2250758342100','_blank');closeWAModal()">📞 Appeler sur WhatsApp</button>
+    </div>
+    <button class="wa-btn-close" onclick="closeWAModal()">Annuler</button>
+  </div>
+</div>
+
+<!-- Share sheet -->
+<div class="share-sheet" id="share-sheet" style="display:none;" onclick="closeShareSheet()">
+  <div class="share-sheet-box" onclick="event.stopPropagation()">
+    <div class="ss-title">🏠 Partager une annonce dans la conversation</div>
+    <div class="ss-annonce-item" onclick="sendAnnonceMsg('Appartement F3 – Cocody Riviera 3','250 000 FCFA/mois')">
+      <div class="ss-ai">🏢</div><div><div class="ss-at">Appartement F3 – Cocody Riviera 3</div><div class="ss-ap">250 000 FCFA/mois</div></div>
+    </div>
+    <div class="ss-annonce-item" onclick="sendAnnonceMsg('Suite meublée – Plateau Abidjan','85 000 FCFA/nuit')">
+      <div class="ss-ai">🛋️</div><div><div class="ss-at">Suite meublée – Plateau Abidjan</div><div class="ss-ap">85 000 FCFA/nuit</div></div>
+    </div>
+    <div class="ss-annonce-item" onclick="sendAnnonceMsg('Villa duplex piscine – Marcory Zone 4','85 000 000 FCFA')">
+      <div class="ss-ai">🏡</div><div><div class="ss-at">Villa duplex piscine – Marcory Zone 4</div><div class="ss-ap">85 000 000 FCFA</div></div>
+    </div>
+    <button class="ss-close" onclick="closeShareSheet()">Annuler</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+<script>
+// ── NAVIGATION ──
+function goto(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById(id);
+  t.classList.add('active');
+  t.scrollTop = 0;
+  if (id === 'scr-vr') setTimeout(initVR, 80);
+  if (id === 'scr-chat') initChat();
+}
+function showToast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+function setTab(el) { document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('on')); el.classList.add('on'); }
+
+// ── AI RECOMMENDATIONS ──
+function togglePref(el) { el.classList.toggle('sel'); }
+
+const aiData = [
+  { type:'apt', title:'Appartement F3 neuf avec balcon', loc:'📍 Cocody – Riviera 3', price:'250 000', unit:'FCFA/mois', match:98, why:'✅ Correspond à votre budget · ✅ Zone Cocody · ✅ Climatisation · ✅ Parking · ✅ Visite 360° disponible' },
+  { type:'apt', title:'Appartement F2 climatisé – Résidence sécurisée', loc:'📍 Cocody – Angré', price:'200 000', unit:'FCFA/mois', match:94, why:'✅ Zone Cocody · ✅ Dans votre budget · ✅ Climatisation · ✅ Gardiennage 24h' },
+  { type:'meu', title:'Studio meublé haut de gamme – Centre Plateau', loc:'📍 Plateau, Abidjan', price:'95 000', unit:'FCFA/mois', match:87, why:'✅ Meublé et prêt à habiter · ✅ Très bien situé · ✅ Wifi inclus · ⚠️ Légèrement hors zone préférée' },
+  { type:'vil', title:'Duplex F4 standing – Résidence gardée', loc:'📍 Cocody – II Plateaux', price:'450 000', unit:'FCFA/mois', match:82, why:'✅ Zone Cocody · ✅ Piscine & Parking · ⚠️ Budget légèrement supérieur à votre critère' },
+];
+
+function runAiSearch() {
+  const btn = document.querySelector('.btn-ai-search');
+  btn.textContent = '🤖 Analyse en cours...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '🤖 Lancer la recherche IA'; btn.disabled = false;
+    const res = document.getElementById('ai-results');
+    res.style.display = 'block';
+    document.getElementById('ai-result-count').textContent = `${aiData.length} biens trouvés sur 2 406 analysés`;
+    document.getElementById('ai-result-sub').textContent = `L'IA a analysé votre profil (zone Cocody, budget 500 000 FCFA, clim + parking + visite 360°) et sélectionné les meilleures correspondances :`;
+    document.getElementById('ai-score-fill').style.width = '92%';
+    const cont = document.getElementById('ai-cards-container');
+    cont.innerHTML = aiData.map(d => `
+      <div class="ai-card" onclick="goto('scr-detail')">
+        <div class="ai-card-img ${d.type}">${d.type==='apt'?'🏢':d.type==='meu'?'🛋️':'🏡'}</div>
+        <div class="ai-card-body">
+          <div class="ai-card-top">
+            <div class="ai-match-badge">🤖 ${d.match}% match</div>
+            <div class="ai-card-price">${d.price} <span>${d.unit}</span></div>
+          </div>
+          <div class="ai-card-title">${d.title}</div>
+          <div class="ai-card-loc">${d.loc}</div>
+          <div class="ai-why">${d.why}</div>
+          <div class="ai-card-btns">
+            <button class="ai-card-btn ai-btn-view" onclick="event.stopPropagation();goto('scr-detail')">Voir l'annonce</button>
+            <button class="ai-card-btn ai-btn-vr" onclick="event.stopPropagation();goto('scr-vr')">🥽 Visite 360°</button>
+            <button class="ai-card-btn ai-btn-pay" onclick="event.stopPropagation();goto('scr-payment')">💳 Caution</button>
+          </div>
+        </div>
+      </div>`).join('');
+    res.scrollIntoView({ behavior:'smooth', block:'start' });
+    showToast('🤖 IA : 4 biens parfaits trouvés pour vous !');
+  }, 1800);
+}
+
+// ── PAYMENT ──
+let currentPayMethod = 'om';
+function selectPayMethod(el, method, name) {
+  document.querySelectorAll('.pay-method').forEach(m => m.className = 'pay-method');
+  el.classList.add('sel-' + (method==='card' ? 'card' : method==='wave' ? 'wave' : 'om'));
+  currentPayMethod = method;
+  document.getElementById('pay-method-name').textContent = name;
+  document.getElementById('pay-phone-field').style.display = method === 'card' ? 'none' : 'block';
+  document.getElementById('otp-section').classList.remove('show');
+  const btn = document.getElementById('btn-pay-now');
+  const icons = { om:'🟠 Orange Money', wave:'🌊 Wave', mtn:'💛 MTN MoMo', card:'💳 Carte bancaire' };
+  const cls = { om:'btn-pay-om', wave:'btn-pay-wave', mtn:'btn-pay-om', card:'btn-pay-card' };
+  btn.className = 'btn-pay-now ' + cls[method];
+  btn.textContent = `Payer 252 500 FCFA avec ${icons[method]}`;
+  btn.style.display = 'flex';
+  document.getElementById('receipt-method').textContent = name;
+}
+function initPayment() {
+  const phone = document.getElementById('pay-phone-input')?.value;
+  if (currentPayMethod !== 'card' && !phone) { showToast('⚠️ Entrez votre numéro de téléphone'); return; }
+  document.getElementById('btn-pay-now').style.display = 'none';
+  if (currentPayMethod !== 'card') {
+    document.getElementById('otp-phone-display').textContent = '+225 ' + (phone || '07 00 00 00 00');
+    document.getElementById('otp-section').classList.add('show');
+    showToast('📱 Code OTP envoyé par SMS !');
+  } else { confirmPayment(); }
+}
+function otpNav(el, idx) {
+  if (el.value.length === 1) {
+    const inputs = document.querySelectorAll('.otp-input');
+    if (idx < 5) inputs[idx+1].focus();
+    else document.getElementById('btn-confirm-pay').focus();
+  }
+}
+function confirmPayment() {
+  showToast('⏳ Traitement en cours...');
+  setTimeout(() => {
+    document.getElementById('pay-form-area').style.display = 'none';
+    document.getElementById('pay-success').classList.add('show');
+    showToast('🎉 Paiement confirmé ! Caution enregistrée.');
+  }, 1500);
+}
+
+// ── CHAT ──
+const conversations = [
+  { id:0, name:'Konan Adjoua', sub:'Propriétaire · Appt F3 Cocody', type:'prop', online:true, unread:2, time:'14:32', last:'D\'accord, je suis disponible demain matin.' },
+  { id:1, name:'Diabaté Mamadou', sub:'Propriétaire · Villa Zone 4', type:'prop', online:false, unread:0, time:'11:15', last:'La caution est de 2 mois.' },
+  { id:2, name:'🏘️ Groupe Cocody Riviera', sub:'12 membres · Quartier', type:'group', online:false, unread:1, time:'09:44', last:'Quelqu\'un connaît un bon plombier ?' },
+  { id:3, name:'Yao Kouassi', sub:'Utilisateur · Cherche appt', type:'user', online:true, unread:0, time:'Hier', last:'Merci pour le partage !' },
+  { id:4, name:'🛟 Support ImmoCI', sub:'Équipe ImmoCI · Disponible 24/7', type:'support', online:true, unread:0, time:'Lun', last:'Votre annonce est en ligne !' },
+];
+
+const convMessages = {
+  0: [
+    { from:'them', text:'Bonjour ! Je vois que vous êtes intéressé par mon appartement F3 à Cocody.', time:'14:20' },
+    { from:'me', text:'Oui bonjour ! Je souhaiterais visiter le bien. Est-ce possible cette semaine ?', time:'14:22' },
+    { from:'them', text:'Bien sûr ! Voici quelques photos supplémentaires et j\'ai aussi activé la visite 360° sur ImmoCI.', time:'14:25', type:'photo' },
+    { from:'me', text:'Merci ! J\'ai fait la visite 360°, l\'appartement est vraiment bien. La caution c\'est combien ?', time:'14:28' },
+    { from:'them', text:'La caution est d\'un mois de loyer, soit 250 000 FCFA. Vous pouvez payer directement sur ImmoCI par Orange Money ou Wave.', time:'14:30', annonce:true },
+    { from:'them', text:'D\'accord, je suis disponible demain matin.', time:'14:32' },
+  ],
+  4: [
+    { from:'them', text:'👋 Bonjour ! Bienvenue sur ImmoCI. Je suis votre assistant support. Comment puis-je vous aider ?', time:'10:00' },
+    { from:'me', text:'Comment fonctionne le paiement de caution ?', time:'10:05' },
+    { from:'them', text:'✅ Le paiement de caution sur ImmoCI est 100% sécurisé. Vous payez via Orange Money, Wave ou carte bancaire. La caution est gardée par ImmoCI jusqu\'à la remise des clés. Si le propriétaire se désiste, vous êtes remboursé sous 48h.', time:'10:07' },
+  ],
+};
+
+let currentConvId = null;
+let typingTimer = null;
+
+function initChat() {
+  renderConvList(conversations);
+  buildEmojiPicker();
+}
+
+function renderConvList(convs) {
+  const list = document.getElementById('conv-list');
+  list.innerHTML = convs.map(c => `
+    <div class="conv-item ${c.unread ? '' : ''}" onclick="openConv(${c.id})" id="ci-${c.id}">
+      <div class="ci-avatar ${c.type} ${c.online ? 'online' : ''}">${c.type==='prop'?'👤':c.type==='group'?'🏘️':c.type==='support'?'🛟':'👥'}</div>
+      <div class="ci-body">
+        <div class="ci-top">
+          <span class="ci-name">${c.name}</span>
+          <span class="ci-time">${c.time}</span>
+        </div>
+        <div class="ci-last ${c.unread ? 'font-weight:600' : ''}">${c.last}</div>
+      </div>
+      ${c.unread ? `<div class="ci-unread">${c.unread}</div>` : ''}
+    </div>`).join('');
+}
+
+function filterConvs(q) {
+  const filtered = conversations.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.last.toLowerCase().includes(q.toLowerCase()));
+  renderConvList(filtered);
+}
+function setConvTab(el, type) {
+  document.querySelectorAll('.conv-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = type === 'all' ? conversations : conversations.filter(c => c.type === type || (type==='prop' && c.type==='prop'));
+  renderConvList(type === 'all' ? conversations : filtered);
+}
+
+function openConv(id) {
+  currentConvId = id;
+  const conv = conversations.find(c => c.id === id);
+  if (!conv) return;
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('ci-' + id)?.classList.add('active');
+  document.getElementById('chat-empty').style.display = 'none';
+  document.getElementById('chat-conv').style.display = 'flex';
+  document.getElementById('conv-name').textContent = conv.name;
+  document.getElementById('conv-status').textContent = conv.online ? '🟢 En ligne · ' + (conv.type==='prop'?'Propriétaire':conv.type==='support'?'Support ImmoCI':'Utilisateur') : '⚫ Hors ligne';
+  const avatar = document.getElementById('conv-avatar');
+  avatar.className = 'conv-avatar ' + conv.type;
+  avatar.textContent = conv.type==='prop'?'👤':conv.type==='group'?'🏘️':conv.type==='support'?'🛟':'👥';
+  // Clear unread
+  conv.unread = 0; renderConvList(conversations);
+  document.getElementById('ci-' + id)?.classList.add('active');
+  renderMessages(id);
+}
+
+function renderMessages(id) {
+  const area = document.getElementById('messages-area');
+  const msgs = convMessages[id] || [];
+  area.innerHTML = '<div class="msg-day">Aujourd\'hui</div>' + msgs.map(m => buildMsgHTML(m)).join('');
+  area.scrollTop = area.scrollHeight;
+}
+
+function buildMsgHTML(m) {
+  if (m.type === 'photo') {
+    return `<div class="msg ${m.from}">
+      ${m.from==='them'?'<div class="msg-avatar prop">👤</div>':''}
+      <div><div class="msg-bubble"><div class="msg-photo">📸</div><div style="font-size:.74rem;margin-top:6px;opacity:.8;">Photos de l'appartement</div></div>
+      <div class="msg-time">${m.time} ${m.from==='me'?'<span class="msg-status">✓✓</span>':''}</div></div>
+    </div>`;
+  }
+  if (m.annonce) {
+    return `<div class="msg ${m.from}">
+      ${m.from==='them'?'<div class="msg-avatar prop">👤</div>':''}
+      <div><div class="msg-bubble"><div class="msg-annonce">
+        <div class="ma-header">🏠 Annonce ImmoCI</div>
+        <div class="ma-img">🏢</div>
+        <div class="ma-title">Appartement F3 – Cocody Riviera 3</div>
+        <div class="ma-price">250 000 FCFA / mois</div>
+        <button class="ma-btn" onclick="goto('scr-payment')">💳 Payer la caution</button>
+      </div></div>
+      <div class="msg-time">${m.time}</div></div>
+    </div>`;
+  }
+  return `<div class="msg ${m.from}">
+    ${m.from==='them'?`<div class="msg-avatar ${currentConvId===4?'support':currentConvId===2?'group':'prop'}">${currentConvId===4?'🛟':currentConvId===2?'🏘️':'👤'}</div>`:''}
+    <div><div class="msg-bubble">${m.text}</div>
+    <div class="msg-time">${m.time}${m.from==='me'?' <span class="msg-status">✓✓</span>':''}</div></div>
+  </div>`;
+}
+
+function sendMessage() {
+  const ta = document.getElementById('chat-textarea');
+  const text = ta.value.trim();
+  if (!text) return;
+  ta.value = ''; autoResize(ta);
+  const area = document.getElementById('messages-area');
+  const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+  const msg = { from:'me', text, time:now };
+  if (!convMessages[currentConvId]) convMessages[currentConvId] = [];
+  convMessages[currentConvId].push(msg);
+  area.innerHTML += buildMsgHTML(msg);
+  area.scrollTop = area.scrollHeight;
+  simulateTyping(area, now);
+}
+
+function simulateTyping(area, now) {
+  if (currentConvId === null) return;
+  const conv = conversations.find(c => c.id === currentConvId);
+  if (!conv?.online) return;
+  clearTimeout(typingTimer);
+  setTimeout(() => {
+    document.getElementById('typing-indicator').style.display = 'flex';
+    area.scrollTop = area.scrollHeight;
+    typingTimer = setTimeout(() => {
+      document.getElementById('typing-indicator').style.display = 'none';
+      const replies = [
+        'Merci pour votre message ! Je vous réponds dès que possible.',
+        'Bien reçu ! Vous pouvez visiter le bien cette semaine.',
+        'D\'accord, je note votre demande.',
+        'Parfait ! Voulez-vous payer la caution directement sur ImmoCI ?',
+        'Oui, le bien est toujours disponible. Quand souhaitez-vous visiter ?',
+      ];
+      const reply = { from:'them', text: replies[Math.floor(Math.random()*replies.length)], time:now };
+      convMessages[currentConvId].push(reply);
+      area.innerHTML += buildMsgHTML(reply);
+      area.scrollTop = area.scrollHeight;
+    }, 2000);
+  }, 800);
+}
+
+function handleChatKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function showChatEmpty() { document.getElementById('chat-conv').style.display='none'; document.getElementById('chat-empty').style.display='flex'; }
+
+function triggerPhotoUpload() { document.getElementById('chat-photo-input').click(); }
+function sendPhoto(input) {
+  if (!input.files[0]) return;
+  const area = document.getElementById('messages-area');
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  area.innerHTML += buildMsgHTML({ from:'me', type:'photo', time:now });
+  area.scrollTop = area.scrollHeight;
+  input.value = '';
+  showToast('📸 Photo envoyée !');
+}
+
+function openShareSheet() { document.getElementById('share-sheet').style.display='flex'; }
+function closeShareSheet() { document.getElementById('share-sheet').style.display='none'; }
+function sendAnnonceMsg(title, price) {
+  closeShareSheet();
+  const area = document.getElementById('messages-area');
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const html = `<div class="msg me"><div><div class="msg-bubble"><div class="msg-annonce">
+    <div class="ma-header">🏠 Annonce ImmoCI</div>
+    <div class="ma-img">🏢</div>
+    <div class="ma-title">${title}</div>
+    <div class="ma-price">${price}</div>
+    <button class="ma-btn" onclick="goto('scr-payment')">💳 Payer la caution</button>
+  </div></div><div class="msg-time">${now} <span class="msg-status">✓✓</span></div></div></div>`;
+  area.innerHTML += html;
+  area.scrollTop = area.scrollHeight;
+  showToast('🏠 Annonce partagée dans la conversation !');
+}
+
+function buildEmojiPicker() {
+  const emojis = ['😊','😄','🙏','👍','✅','❤️','🔑','🏠','🏡','🏢','💰','📷','🎉','💪','🌟','⭐','🤝','💡','🔥','✨','🏆','😎','🙌','👏','🚀','💬','📱','💳','🟠','🌊'];
+  document.getElementById('emoji-grid').innerHTML = emojis.map(e => `<span onclick="insertEmoji('${e}')">${e}</span>`).join('');
+}
+function toggleEmoji() { const ep=document.getElementById('emoji-picker'); ep.style.display=ep.style.display==='none'?'block':'none'; }
+function insertEmoji(e) { const ta=document.getElementById('chat-textarea'); ta.value+=e; ta.focus(); document.getElementById('emoji-picker').style.display='none'; }
+
+function openWAModal() { document.getElementById('wa-modal').style.display='flex'; }
+function closeWAModal() { document.getElementById('wa-modal').style.display='none'; }
+
+// ══ VR VIEWER ══
+let vrScene,vrCamera,vrRenderer,vrSphere,vrLon=0,vrLat=0,vrOnX=0,vrOnY=0,vrOnLon=0,vrOnLat=0,vrDrag=false,vrAuto=false,vrFov=75,vrMeasureMode=false,vrMClicks=0,vrMPoints=[],vrAllM=[],vrInited=false,vrCurRoom=0;
+const vrRooms=[
+  {name:'🛋️ Salon',L:'6,80 m',W:'5,20 m',H:'2,85 m',A:'35,36',c1:'#1a3a2a',c2:'#2d6b4a'},
+  {name:'🍳 Cuisine',L:'4,20 m',W:'3,80 m',H:'2,80 m',A:'15,96',c1:'#2a1a0a',c2:'#6b3d1a'},
+  {name:'🛏️ Chambre 1',L:'5,10 m',W:'4,00 m',H:'2,85 m',A:'20,40',c1:'#0a1a2a',c2:'#1a3d6b'},
+  {name:'🛏️ Chambre 2',L:'4,50 m',W:'3,60 m',H:'2,85 m',A:'16,20',c1:'#1a0a2a',c2:'#3d1a6b'},
+  {name:'🚿 Salle de bain',L:'3,20 m',W:'2,80 m',H:'2,70 m',A:'8,96',c1:'#0a2a2a',c2:'#1a6b6b'},
+  {name:'🏠 Terrasse',L:'8,00 m',W:'3,50 m',H:'—',A:'28,00',c1:'#1a2a0a',c2:'#4a6b1a'},
+];
+function initVR(){
+  const el=document.getElementById('vr-viewer');
+  if(!el) return;
+  if(vrInited){vrRenderer.setSize(window.innerWidth,window.innerHeight);requestAnimationFrame(vrAnim);return;}
+  vrInited=true;
+  vrScene=new THREE.Scene();
+  vrCamera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+  vrCamera.position.set(0,0,0.01);
+  vrRenderer=new THREE.WebGLRenderer({antialias:true});
+  vrRenderer.setSize(window.innerWidth,window.innerHeight);
+  vrRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  el.appendChild(vrRenderer.domElement);
+  vrBuildRoom(0);
+  const sc=document.getElementById('scr-vr');
+  sc.addEventListener('mousedown',e=>{if(vrMeasureMode){vrHandleM(e);return;}vrDrag=true;vrOnX=e.clientX;vrOnY=e.clientY;vrOnLon=vrLon;vrOnLat=vrLat;});
+  sc.addEventListener('mousemove',e=>{if(!vrDrag)return;vrLon=(vrOnX-e.clientX)*.15+vrOnLon;vrLat=(e.clientY-vrOnY)*.15+vrOnLat;});
+  sc.addEventListener('mouseup',()=>vrDrag=false);
+  sc.addEventListener('touchstart',e=>{e.preventDefault();vrDrag=true;vrOnX=e.touches[0].clientX;vrOnY=e.touches[0].clientY;vrOnLon=vrLon;vrOnLat=vrLat;},{passive:false});
+  sc.addEventListener('touchmove',e=>{e.preventDefault();if(!vrDrag)return;vrLon=(vrOnX-e.touches[0].clientX)*.2+vrOnLon;vrLat=(e.touches[0].clientY-vrOnY)*.2+vrOnLat;},{passive:false});
+  sc.addEventListener('touchend',()=>vrDrag=false);
+  sc.addEventListener('wheel',e=>{e.preventDefault();vrFov=Math.max(30,Math.min(110,vrFov+e.deltaY*.05));vrCamera.fov=vrFov;vrCamera.updateProjectionMatrix();},{passive:false});
+  window.addEventListener('resize',()=>{if(!vrCamera||!vrRenderer)return;vrCamera.aspect=window.innerWidth/window.innerHeight;vrCamera.updateProjectionMatrix();vrRenderer.setSize(window.innerWidth,window.innerHeight);});
+  const mc=document.getElementById('vr-measure-canvas');
+  mc.width=window.innerWidth;mc.height=window.innerHeight;
+  vrAnim();
+}
+function vrBuildRoom(idx){
+  if(vrSphere){vrScene.remove(vrSphere);vrSphere.geometry.dispose();vrSphere.material.dispose();}
+  const r=vrRooms[idx];
+  const cv=document.createElement('canvas');cv.width=2048;cv.height=1024;
+  const ctx=cv.getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,1024);
+  g.addColorStop(0,r.c1);g.addColorStop(.45,r.c2);g.addColorStop(.7,'#3a2a1a');g.addColorStop(1,'#1a1008');
+  ctx.fillStyle=g;ctx.fillRect(0,0,2048,1024);
+  ctx.fillStyle='rgba(200,170,120,.13)';
+  for(let i=0;i<2048;i+=128)for(let j=768;j<1024;j+=64)if((Math.floor(i/128)+Math.floor((j-768)/64))%2===0)ctx.fillRect(i,j,128,64);
+  ctx.fillStyle='rgba(255,240,180,.1)';ctx.fillRect(260,80,220,420);ctx.fillRect(1550,120,190,380);
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+  for(let i=0;i<2048;i+=256){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,1024);ctx.stroke();}
+  for(let j=0;j<1024;j+=128){ctx.beginPath();ctx.moveTo(0,j);ctx.lineTo(2048,j);ctx.stroke();}
+  ctx.font='bold 26px DM Sans,Arial';ctx.fillStyle='rgba(244,130,31,.72)';ctx.textAlign='center';
+  ctx.fillText('← '+r.L+' →',1024,756);
+  ctx.save();ctx.translate(70,512);ctx.rotate(-Math.PI/2);ctx.fillText('← '+r.W+' →',0,0);ctx.restore();
+  ctx.font='bold 44px DM Sans,Arial';ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillText(r.name,1024,510);
+  const tex=new THREE.CanvasTexture(cv);
+  const geo=new THREE.SphereGeometry(500,60,40);geo.scale(-1,1,1);
+  vrSphere=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex}));
+  vrScene.add(vrSphere);
+}
+function vrAnim(){
+  requestAnimationFrame(vrAnim);
+  if(vrAuto&&!vrDrag)vrLon+=.05;
+  vrLat=Math.max(-85,Math.min(85,vrLat));
+  const phi=THREE.MathUtils.degToRad(90-vrLat);
+  const theta=THREE.MathUtils.degToRad(vrLon);
+  vrCamera.lookAt(500*Math.sin(phi)*Math.cos(theta),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(theta));
+  const n=document.getElementById('compass-needle');
+  if(n)n.setAttribute('transform',`rotate(${-vrLon},24,24)`);
+  if(vrRenderer&&vrScene&&vrCamera)vrRenderer.render(vrScene,vrCamera);
+}
+function vrLoadRoom(idx){
+  vrCurRoom=idx;
+  document.querySelectorAll('.room-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  vrLat=0;vrBuildRoom(idx);
+  const r=vrRooms[idx];
+  document.getElementById('vr-dim-room').textContent=r.name;
+  document.getElementById('vr-dL').textContent=r.L;
+  document.getElementById('vr-dW').textContent=r.W;
+  document.getElementById('vr-dH').textContent=r.H;
+  document.getElementById('vr-dA').textContent=r.A+' m²';
+  document.getElementById('vr-dA2').textContent=r.A;
+  showToast(r.name);
+}
+function vrToggleDim(){document.getElementById('vr-dim-panel').classList.toggle('show');}
+function vrToggleMeasure(){
+  vrMeasureMode=!vrMeasureMode;
+  document.getElementById('vr-btn-measure').classList.toggle('tool-on',vrMeasureMode);
+  document.getElementById('vr-measure-panel').classList.toggle('show',vrMeasureMode);
+  document.getElementById('scr-vr').classList.toggle('measure-active',vrMeasureMode);
+  vrMPoints=[];vrMClicks=0;
+  document.getElementById('vr-measure-canvas').getContext('2d').clearRect(0,0,window.innerWidth,window.innerHeight);
+  document.querySelectorAll('.m-point,.m-label').forEach(e=>e.remove());
+  if(vrMeasureMode)showToast('📏 Cliquez 2 points pour mesurer');
+}
+function vrHandleM(e){
+  const x=e.clientX,y=e.clientY;
+  vrMPoints.push({x,y});vrMClicks++;
+  const pt=document.createElement('div');pt.className='m-point';pt.style.left=x+'px';pt.style.top=y+'px';
+  document.getElementById('scr-vr').appendChild(pt);
+  if(vrMClicks===2){
+    const p1=vrMPoints[vrMPoints.length-2],p2=vrMPoints[vrMPoints.length-1];
+    const dist=((Math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)/window.innerWidth)*12*(vrFov/75)).toFixed(2);
+    const mc=document.getElementById('vr-measure-canvas'),ctx=mc.getContext('2d');
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);
+    ctx.strokeStyle='#f4821f';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);
+    const lbl=document.createElement('div');lbl.className='m-label';
+    lbl.style.left=((p1.x+p2.x)/2)+'px';lbl.style.top=((p1.y+p2.y)/2)+'px';lbl.textContent=dist+' m';
+    document.getElementById('scr-vr').appendChild(lbl);
+    vrAllM.push(dist);vrUpdateML();
+    vrMPoints=[];vrMClicks=0;
+  }
+}
+function vrUpdateML(){
+  const l=document.getElementById('vr-measure-list');
+  l.innerHTML=vrAllM.length?vrAllM.map((d,i)=>`<div class="mi"><span class="mi-lbl">Mesure ${i+1}</span><span class="mi-val">${d} m</span></div>`).join(''):'<div style="font-size:.72rem;color:rgba(255,255,255,.3);text-align:center;padding:9px;">Aucune mesure</div>';
+}
+function vrClearMeasures(){vrAllM=[];vrMPoints=[];vrMClicks=0;document.getElementById('vr-measure-canvas').getContext('2d').clearRect(0,0,window.innerWidth,window.innerHeight);document.querySelectorAll('.m-point,.m-label').forEach(e=>e.remove());vrUpdateML();}
+function vrToggleAuto(){vrAuto=!vrAuto;document.getElementById('vr-btn-auto').classList.toggle('tool-on',vrAuto);showToast(vrAuto?'🔄 Auto activé':'⏸ Auto arrêté');}
+function vrZoomIn(){vrFov=Math.max(30,vrFov-10);vrCamera.fov=vrFov;vrCamera.updateProjectionMatrix();}
+function vrReset(){vrLon=0;vrLat=0;vrFov=75;vrCamera.fov=75;vrCamera.updateProjectionMatrix();showToast('🧭 Vue réinitialisée');}
+
+// Guide capture
+let guideStep=0;
+const guideSteps=[{t:'Photo 360° — 1/6',d:'Faites face à la pièce, restez immobile.',i:'🌐'},{t:'Position 2/6',d:'Tournez de 60° vers la droite.',i:'🌐'},{t:'Position 3/6',d:'Continuez à tourner.',i:'🌐'},{t:'Position 4/6 — Dos',d:'Vous êtes dos à votre position de départ.',i:'🌐'},{t:'Position 5/6',d:'Continuez à tourner.',i:'🌐'},{t:'Finalisation 6/6',d:'Dernière capture !',i:'✅'}];
+function startVrGuide(t){guideStep=0;document.getElementById('vr-cap-guide').classList.add('show');updateGuide();}
+function updateGuide(){const s=guideSteps[guideStep];document.getElementById('guide-big-ico').textContent=s.i;document.getElementById('guide-title').textContent=s.t;document.getElementById('guide-desc').textContent=s.d;document.getElementById('guide-dots').innerHTML=guideSteps.map((_,i)=>`<div class="g-dot ${i<guideStep?'done':i===guideStep?'cur':''}"></div>`).join('');}
+function vrNextGuide(){guideStep++;if(guideStep>=guideSteps.length){document.getElementById('vr-cap-guide').classList.remove('show');showToast('✅ Capture 360° terminée !');return;}updateGuide();}
+
+// ── LOADER ──
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('loader').classList.add('hide'),2200);
+  initChat();
+});
+</script>
+</body>
+</html>
